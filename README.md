@@ -6,7 +6,8 @@ Web information system for the WS practical assignment, built with Django, RDF, 
 
 - Source: https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020
 - Raw CSVs are stored in `data/raw/`
-- `scripts/download_raw_data.sh` fetches the public Formula 1 CSV mirror used in this repository when Kaggle credentials are not configured locally
+- `scripts/download_raw_data.sh` downloads the official Kaggle dataset `rohanrao/formula-1-world-championship-1950-2020`
+- The Kaggle page currently resolves to the newer “Formula 1 World Championship (1950 - 2024)” dataset page, but the slug above is still the one used by the Kaggle CLI
 
 ## Stack
 
@@ -47,6 +48,14 @@ cp .env.example .env
 ./scripts/download_raw_data.sh
 ```
 
+This requires:
+
+```bash
+python3 -m pip install kaggle
+```
+
+and a valid `~/.kaggle/kaggle.json` API token file.
+
 5. Generate RDF from the raw CSV files:
 
 ```bash
@@ -73,7 +82,7 @@ This repository currently provides:
 - environment-driven GraphDB configuration
 - a starter GraphDB client service
 - runnable helper scripts for data download, RDF conversion, GraphDB loading, and the Django dev server
-- a CSV-to-RDF pipeline adapted to the committed raw Formula 1 CSV files
+- a CSV-to-RDF pipeline adapted to the official Kaggle Formula 1 CSV schema
 - committed raw CSV data in `data/raw/`
 - sample SPARQL query files
 - drafted GitHub issues in `docs/github-issues-draft.md`

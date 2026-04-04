@@ -34,7 +34,7 @@ This file summarizes what has already been implemented in the repository baselin
   - run the Django webserver
   - convert CSV to RDF
   - load RDF into GraphDB
-  - download the raw CSV files again
+  - download the official Kaggle raw CSV files again
 - Current RDF conversion covers these dataset areas when the CSV files are present:
   - seasons
   - circuits

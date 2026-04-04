@@ -18,7 +18,7 @@ EXPECTED_FILES = {
     "circuits": "circuits.csv",
     "constructors": "constructors.csv",
     "drivers": "drivers.csv",
-    "races": "races.csv",
+    "races": ("races.csv",),
     "results": ("results.csv", "race_results.csv"),
     "status": "status.csv",
 }
@@ -64,11 +64,15 @@ def convert(frames: dict[str, pd.DataFrame]) -> Graph:
     graph.bind("f1", F1)
     graph.bind("rdfs", RDFS)
 
+    race_uri_by_id: dict[object, URIRef] = {}
+    season_uri_by_year: dict[object, URIRef] = {}
+
     seasons = frames.get("seasons")
     if seasons is not None:
         for row in seasons.itertuples(index=False):
             season_value = getattr(row, "year", getattr(row, "season"))
             season_uri = build_uri("season", season_value)
+            season_uri_by_year[season_value] = season_uri
             graph.add((season_uri, RDF.type, F1.Season))
             add_literal(graph, season_uri, F1.year, season_value, XSD.gYear)
             add_literal(graph, season_uri, RDFS.seeAlso, row.url, XSD.anyURI)
@@ -126,9 +130,12 @@ def convert(frames: dict[str, pd.DataFrame]) -> Graph:
     races = frames.get("races")
     if races is not None:
         for row in races.itertuples(index=False):
-            race_uri = build_uri("race", f"{row.season}-{row.round}")
-            season_uri = build_uri("season", row.season)
+            season_value = getattr(row, "year", getattr(row, "season"))
+            race_key = getattr(row, "raceId", f"{season_value}-{row.round}")
+            race_uri = build_uri("race", race_key)
+            season_uri = season_uri_by_year.get(season_value, build_uri("season", season_value))
             circuit_uri = build_uri("circuit", row.circuitId)
+            race_uri_by_id[getattr(row, "raceId", race_key)] = race_uri
             graph.add((race_uri, RDF.type, F1.Race))
             graph.add((race_uri, F1.season, season_uri))
             graph.add((race_uri, F1.circuit, circuit_uri))
@@ -136,6 +143,16 @@ def convert(frames: dict[str, pd.DataFrame]) -> Graph:
             add_literal(graph, race_uri, F1.name, getattr(row, "name", getattr(row, "raceName", None)))
             add_literal(graph, race_uri, F1.date, row.date, XSD.date)
             add_literal(graph, race_uri, F1.time, row.time)
+            add_literal(graph, race_uri, F1.fp1Date, getattr(row, "fp1_date", None), XSD.date)
+            add_literal(graph, race_uri, F1.fp1Time, getattr(row, "fp1_time", None))
+            add_literal(graph, race_uri, F1.fp2Date, getattr(row, "fp2_date", None), XSD.date)
+            add_literal(graph, race_uri, F1.fp2Time, getattr(row, "fp2_time", None))
+            add_literal(graph, race_uri, F1.fp3Date, getattr(row, "fp3_date", None), XSD.date)
+            add_literal(graph, race_uri, F1.fp3Time, getattr(row, "fp3_time", None))
+            add_literal(graph, race_uri, F1.qualiDate, getattr(row, "quali_date", None), XSD.date)
+            add_literal(graph, race_uri, F1.qualiTime, getattr(row, "quali_time", None))
+            add_literal(graph, race_uri, F1.sprintDate, getattr(row, "sprint_date", None), XSD.date)
+            add_literal(graph, race_uri, F1.sprintTime, getattr(row, "sprint_time", None))
             add_literal(graph, race_uri, F1.firstPractice, getattr(row, "firstPractice", None))
             add_literal(graph, race_uri, F1.secondPractice, getattr(row, "secondPractice", None))
             add_literal(graph, race_uri, F1.thirdPractice, getattr(row, "thirdPractice", None))
@@ -146,16 +163,26 @@ def convert(frames: dict[str, pd.DataFrame]) -> Graph:
     results = frames.get("results")
     if results is not None:
         for row in results.itertuples(index=False):
-            result_uri = build_uri("result", f"{row.season}-{row.round}-{row.driverId}")
-            race_uri = build_uri("race", f"{row.season}-{row.round}")
+            result_key = getattr(row, "resultId", f"{getattr(row, 'season', 'unknown')}-{getattr(row, 'round', 'unknown')}-{row.driverId}")
+            result_uri = build_uri("result", result_key)
+            race_id = getattr(row, "raceId", None)
+            if race_id is not None and race_id in race_uri_by_id:
+                race_uri = race_uri_by_id[race_id]
+            else:
+                race_uri = build_uri("race", f"{row.season}-{row.round}")
             driver_uri = build_uri("driver", row.driverId)
             constructor_uri = build_uri("constructor", row.constructorId)
-            status_uri = build_uri("status", slugify(row.status))
+            status_value = getattr(row, "status", None)
+            status_uri = build_uri("status", slugify(status_value)) if has_value(status_value) else None
             graph.add((result_uri, RDF.type, F1.Result))
             graph.add((result_uri, F1.race, race_uri))
             graph.add((result_uri, F1.driver, driver_uri))
             graph.add((result_uri, F1.constructor, constructor_uri))
-            graph.add((result_uri, F1.status, status_uri))
+            if status_uri is not None:
+                graph.add((result_uri, F1.status, status_uri))
+            add_literal(graph, result_uri, F1.resultId, getattr(row, "resultId", None), XSD.integer)
+            add_literal(graph, result_uri, F1.raceId, race_id, XSD.integer)
+            add_literal(graph, result_uri, F1.statusId, getattr(row, "statusId", None), XSD.integer)
             add_literal(graph, result_uri, F1.driverName, getattr(row, "driverName", None))
             add_literal(graph, result_uri, F1.constructorName, getattr(row, "constructorName", None))
             add_literal(graph, result_uri, F1.carNumber, getattr(row, "number", None), XSD.integer)
@@ -165,7 +192,9 @@ def convert(frames: dict[str, pd.DataFrame]) -> Graph:
             add_literal(graph, result_uri, F1.laps, row.laps, XSD.integer)
             add_literal(graph, result_uri, F1.finishText, row.positionText)
             add_literal(graph, result_uri, F1.resultTime, getattr(row, "time", None))
+            add_literal(graph, result_uri, F1.milliseconds, getattr(row, "milliseconds", None), XSD.integer)
             add_literal(graph, result_uri, F1.fastestLapRank, getattr(row, "fastestLapRank", None), XSD.integer)
+            add_literal(graph, result_uri, F1.fastestLapRank, getattr(row, "rank", None), XSD.integer)
             add_literal(graph, result_uri, F1.fastestLap, getattr(row, "fastestLap", getattr(row, "fastestLap_lap", None)), XSD.integer)
             add_literal(graph, result_uri, F1.fastestLapTime, row.fastestLapTime)
             add_literal(graph, result_uri, F1.fastestLapSpeed, getattr(row, "fastestLapSpeed", getattr(row, "averageSpeed", None)), XSD.decimal)
