@@ -1,0 +1,9 @@
+PREFIX f1: <http://example.org/f1/>
+
+SELECT ?season ?year
+WHERE {
+  ?season a f1:Season ;
+          f1:year ?year .
+}
+ORDER BY ?year
+

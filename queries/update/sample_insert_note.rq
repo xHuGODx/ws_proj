@@ -1,0 +1,8 @@
+PREFIX f1: <http://example.org/f1/>
+
+INSERT DATA {
+  GRAPH <http://example.org/graph/notes> {
+    <http://example.org/resource/driver/1> f1:alias "Sample alias" .
+  }
+}
+

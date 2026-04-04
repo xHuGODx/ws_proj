@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{{ project_title }}</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f0e8;
+        --panel: #fffaf3;
+        --ink: #1d1b19;
+        --accent: #b63f1b;
+        --muted: #6b645b;
+        --line: #dbcab5;
+      }
+
+      body {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        background:
+          radial-gradient(circle at top right, rgba(182, 63, 27, 0.12), transparent 24rem),
+          linear-gradient(180deg, #f7f2ea 0%, var(--bg) 100%);
+        color: var(--ink);
+      }
+
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem 4rem;
+      }
+
+      .hero,
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        box-shadow: 0 12px 30px rgba(29, 27, 25, 0.06);
+      }
+
+      .hero {
+        padding: 2rem;
+      }
+
+      .eyebrow {
+        margin: 0 0 0.5rem;
+        color: var(--accent);
+        font-size: 0.85rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2.2rem, 4vw, 4rem);
+        line-height: 0.95;
+      }
+
+      .lead {
+        max-width: 44rem;
+        font-size: 1.05rem;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .panel {
+        padding: 1.25rem;
+      }
+
+      ul {
+        padding-left: 1.2rem;
+        margin-bottom: 0;
+      }
+
+      .status-ok {
+        color: #146c2e;
+      }
+
+      .status-error {
+        color: #8f2014;
+      }
+
+      code {
+        font-size: 0.95em;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <p class="eyebrow">WS Practical Assignment</p>
+        <h1>{{ project_title }}</h1>
+        <p class="lead">
+          Django frontend and management layer for a GraphDB-backed Formula 1 knowledge graph built from the Kaggle championship dataset.
+        </p>
+      </section>
+
+      <section class="grid">
+        <article class="panel">
+          <h2>Application Scope</h2>
+          <ul>
+            {% for section in sections %}
+              <li>{{ section }}</li>
+            {% endfor %}
+          </ul>
+        </article>
+
+        <article class="panel">
+          <h2>GraphDB Status</h2>
+          {% if graphdb.ok %}
+            <p class="status-ok">Connected to <code>{{ graphdb.endpoint }}</code></p>
+            <p>Current triple count: <strong>{{ graphdb.triple_count }}</strong></p>
+          {% else %}
+            <p class="status-error">Connection unavailable</p>
+            <p><code>{{ graphdb.endpoint }}</code></p>
+            <p>{{ graphdb.error }}</p>
+          {% endif %}
+        </article>
+
+        <article class="panel">
+          <h2>Next Setup Step</h2>
+          <p>Place the Kaggle CSV files in <code>data/raw/</code> and run <code>python scripts/csv_to_rdf.py</code>.</p>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
+
