@@ -28,7 +28,6 @@ This file summarizes what has already been implemented in the repository baselin
 
 - `data/raw/` created for Kaggle CSV files
 - `data/rdf/` created for generated RDF output
-- Raw Formula 1 CSV files downloaded and committed into `data/raw/`
 - Initial CSV-to-RDF script added at `scripts/csv_to_rdf.py`
 - Shell helpers added to:
   - run the Django webserver

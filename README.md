@@ -70,7 +70,7 @@ This repository currently provides:
 - a starter GraphDB client service
 - runnable helper scripts for RDF conversion, GraphDB loading, and the Django dev server
 - a CSV-to-RDF pipeline adapted to the official Kaggle Formula 1 CSV schema
-- committed raw CSV data in `data/raw/`
+- an empty `data/raw/` directory for manually added Kaggle CSV files
 - sample SPARQL query files
 - drafted GitHub issues in `docs/github-issues-draft.md`
 
