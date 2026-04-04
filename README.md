@@ -6,8 +6,7 @@ Web information system for the WS practical assignment, built with Django, RDF, 
 
 - Source: https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020
 - Raw CSVs are stored in `data/raw/`
-- `scripts/download_raw_data.sh` downloads the official Kaggle dataset `rohanrao/formula-1-world-championship-1950-2020`
-- The Kaggle page currently resolves to the newer “Formula 1 World Championship (1950 - 2024)” dataset page, but the slug above is still the one used by the Kaggle CLI
+- Add the Kaggle CSV files manually to `data/raw/`
 
 ## Stack
 
@@ -42,19 +41,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-4. Refresh the raw CSVs if needed:
-
-```bash
-./scripts/download_raw_data.sh
-```
-
-This requires:
-
-```bash
-python3 -m pip install kaggle
-```
-
-and a valid `~/.kaggle/kaggle.json` API token file.
+4. Place the Kaggle CSV files into `data/raw/`
 
 5. Generate RDF from the raw CSV files:
 
@@ -81,7 +68,7 @@ This repository currently provides:
 - Django project scaffolding
 - environment-driven GraphDB configuration
 - a starter GraphDB client service
-- runnable helper scripts for data download, RDF conversion, GraphDB loading, and the Django dev server
+- runnable helper scripts for RDF conversion, GraphDB loading, and the Django dev server
 - a CSV-to-RDF pipeline adapted to the official Kaggle Formula 1 CSV schema
 - committed raw CSV data in `data/raw/`
 - sample SPARQL query files
@@ -95,7 +82,6 @@ This repository currently provides:
 
 ## Helper scripts
 
-- `./scripts/download_raw_data.sh`
 - `./scripts/convert_csv_to_rdf.sh`
 - `./scripts/load_rdf_to_graphdb.sh`
 - `./scripts/run_webserver.sh`
