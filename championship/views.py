@@ -2,17 +2,44 @@ from django.shortcuts import render
 
 from .services.graphdb import GraphDBClient
 
+_COMING_SOON = "championship/coming_soon.html"
+
 
 def home(request):
     graphdb = GraphDBClient()
+    stats = [
+        {"value": "75",   "label": "Seasons"},
+        {"value": "77",   "label": "Circuits"},
+        {"value": "861",  "label": "Drivers"},
+        {"value": "212",  "label": "Constructors"},
+        {"value": "1125", "label": "Races"},
+    ]
     context = {
-        "project_title": "Formula 1 Knowledge Graph",
         "graphdb": graphdb.healthcheck(),
-        "sections": [
-            "Seasons and races",
-            "Drivers and constructors",
-            "Results and standings",
-            "SPARQL query and update operations",
-        ],
+        "stats": stats,
     }
     return render(request, "championship/home.html", context)
+
+
+def drivers(request):
+    return render(request, _COMING_SOON, {"page": "Drivers"})
+
+
+def constructors(request):
+    return render(request, _COMING_SOON, {"page": "Constructors"})
+
+
+def seasons(request):
+    return render(request, _COMING_SOON, {"page": "Seasons"})
+
+
+def races(request):
+    return render(request, _COMING_SOON, {"page": "Races"})
+
+
+def circuits(request):
+    return render(request, _COMING_SOON, {"page": "Circuits"})
+
+
+def sparql(request):
+    return render(request, _COMING_SOON, {"page": "SPARQL"})

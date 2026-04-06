@@ -4,6 +4,15 @@ import os
 
 from SPARQLWrapper import JSON, POST, SPARQLWrapper
 
+# Common prefixes prepended to every SPARQL query automatically.
+PREFIXES = """\
+PREFIX f1: <http://example.org/f1/>
+PREFIX res: <http://example.org/resource/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+"""
+
 
 class GraphDBClient:
     def __init__(self) -> None:
@@ -20,27 +29,30 @@ class GraphDBClient:
             wrapper.setCredentials(self.username, self.password)
         return wrapper
 
-    def healthcheck(self) -> dict[str, object]:
-        query = """
-        SELECT (COUNT(*) AS ?triples)
-        WHERE {
-          ?s ?p ?o .
-        }
-        """
+    def query(self, sparql: str) -> list[dict[str, str]]:
+        """Run a SELECT query and return a flat list of row dicts {var: value}."""
         wrapper = self._wrapper(self.query_endpoint)
         wrapper.setReturnFormat(JSON)
-        wrapper.setQuery(query)
+        wrapper.setQuery(PREFIXES + sparql)
+        response = wrapper.queryAndConvert()
+        bindings = response.get("results", {}).get("bindings", [])
+        return [
+            {var: cell["value"] for var, cell in row.items()}
+            for row in bindings
+        ]
+
+    def healthcheck(self) -> dict[str, object]:
         try:
-            response = wrapper.queryAndConvert()
-            bindings = response.get("results", {}).get("bindings", [])
-            triple_count = bindings[0]["triples"]["value"] if bindings else "0"
+            rows = self.query("SELECT (COUNT(*) AS ?triples) WHERE { ?s ?p ?o . }")
+            triple_count = rows[0]["triples"] if rows else "0"
             return {"ok": True, "triple_count": triple_count, "endpoint": self.query_endpoint}
         except Exception as exc:  # noqa: BLE001
             return {"ok": False, "error": str(exc), "endpoint": self.query_endpoint}
 
     def run_update(self, update_query: str) -> None:
+        """Run a SPARQL UPDATE (INSERT/DELETE) query."""
         wrapper = self._wrapper(self.update_endpoint)
         wrapper.setMethod(POST)
-        wrapper.setQuery(update_query)
+        wrapper.setQuery(PREFIXES + update_query)
         wrapper.query()
 

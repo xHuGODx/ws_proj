@@ -9,6 +9,6 @@ if [[ -f .venv/bin/activate ]]; then
   source .venv/bin/activate
 fi
 
-python scripts/csv_to_rdf.py \
+python3 scripts/csv_to_rdf.py \
   --input-dir "${1:-data/raw}" \
-  --output "${2:-data/rdf/formula1.n3}"
+  --output "${2:-data/rdf/formula1.nt}"

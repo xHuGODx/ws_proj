@@ -11,7 +11,7 @@ if [[ -f .env ]]; then
   set +a
 fi
 
-RDF_FILE="${1:-data/rdf/formula1.n3}"
+RDF_FILE="${1:-data/rdf/formula1.nt}"
 GRAPHDB_BASE_URL="${GRAPHDB_BASE_URL:-http://localhost:7200}"
 GRAPHDB_REPOSITORY="${GRAPHDB_REPOSITORY:-ws-formula1}"
 GRAPHDB_GRAPH_URI="${GRAPHDB_GRAPH_URI:-}"

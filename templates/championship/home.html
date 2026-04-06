@@ -1,133 +1,277 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>{{ project_title }}</title>
-    <style>
-      :root {
-        color-scheme: light;
-        --bg: #f4f0e8;
-        --panel: #fffaf3;
-        --ink: #1d1b19;
-        --accent: #b63f1b;
-        --muted: #6b645b;
-        --line: #dbcab5;
-      }
+{% extends "base.html" %}
 
-      body {
-        margin: 0;
-        font-family: Georgia, "Times New Roman", serif;
-        background:
-          radial-gradient(circle at top right, rgba(182, 63, 27, 0.12), transparent 24rem),
-          linear-gradient(180deg, #f7f2ea 0%, var(--bg) 100%);
-        color: var(--ink);
-      }
+{% block title %}Home{% endblock %}
 
-      main {
-        max-width: 960px;
-        margin: 0 auto;
-        padding: 3rem 1.5rem 4rem;
-      }
+{% block extra_head %}
+<style>
+  /* ── Hero ───────────────────────────────────────────────── */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    background: var(--dark);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 4rem 3rem;
+    margin-bottom: 1.5rem;
+  }
 
-      .hero,
-      .panel {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        box-shadow: 0 12px 30px rgba(29, 27, 25, 0.06);
-      }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; right: -60px; bottom: 0;
+    width: 340px;
+    background: var(--red);
+    transform: skewX(-12deg);
+    opacity: 0.08;
+  }
 
-      .hero {
-        padding: 2rem;
-      }
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: 0; right: -20px; bottom: 0;
+    width: 6px;
+    background: var(--red);
+    transform: skewX(-12deg);
+  }
 
-      .eyebrow {
-        margin: 0 0 0.5rem;
-        color: var(--accent);
-        font-size: 0.85rem;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-      }
+  .hero-eyebrow {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 1rem;
+  }
 
-      h1 {
-        margin: 0;
-        font-size: clamp(2.2rem, 4vw, 4rem);
-        line-height: 0.95;
-      }
+  .hero-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: clamp(3.5rem, 8vw, 7rem);
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    color: var(--white);
+    margin-bottom: 1.5rem;
+  }
 
-      .lead {
-        max-width: 44rem;
-        font-size: 1.05rem;
-        color: var(--muted);
-      }
+  .hero-title em {
+    font-style: italic;
+    color: var(--red);
+  }
 
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
-      }
+  .hero-lead {
+    max-width: 38rem;
+    font-size: 1.05rem;
+    color: var(--grey);
+    line-height: 1.6;
+  }
 
-      .panel {
-        padding: 1.25rem;
-      }
+  .hero-badge {
+    display: inline-block;
+    margin-top: 2rem;
+    background: var(--red);
+    color: var(--white);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.4rem 1rem;
+    border-radius: 3px;
+  }
 
-      ul {
-        padding-left: 1.2rem;
-        margin-bottom: 0;
-      }
+  /* ── Section cards ──────────────────────────────────────── */
+  .nav-card {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
 
-      .status-ok {
-        color: #146c2e;
-      }
+  .section-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: border-color 0.2s, transform 0.2s;
+    height: 100%;
+  }
 
-      .status-error {
-        color: #8f2014;
-      }
+  .nav-card:hover .section-card {
+    border-color: var(--red);
+    transform: translateY(-3px);
+  }
 
-      code {
-        font-size: 0.95em;
-      }
-    </style>
-  </head>
-  <body>
-    <main>
-      <section class="hero">
-        <p class="eyebrow">WS Practical Assignment</p>
-        <h1>{{ project_title }}</h1>
-        <p class="lead">
-          Django frontend and management layer for a GraphDB-backed Formula 1 knowledge graph built from the Kaggle championship dataset.
-        </p>
-      </section>
+  .section-card-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
 
-      <section class="grid">
-        <article class="panel">
-          <h2>Application Scope</h2>
-          <ul>
-            {% for section in sections %}
-              <li>{{ section }}</li>
-            {% endfor %}
-          </ul>
-        </article>
+  .section-card-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 1.4rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    color: var(--white);
+  }
 
-        <article class="panel">
-          <h2>GraphDB Status</h2>
-          {% if graphdb.ok %}
-            <p class="status-ok">Connected to <code>{{ graphdb.endpoint }}</code></p>
-            <p>Current triple count: <strong>{{ graphdb.triple_count }}</strong></p>
-          {% else %}
-            <p class="status-error">Connection unavailable</p>
-            <p><code>{{ graphdb.endpoint }}</code></p>
-            <p>{{ graphdb.error }}</p>
-          {% endif %}
-        </article>
+  .section-card-desc {
+    font-size: 0.9rem;
+    color: var(--grey);
+    line-height: 1.5;
+  }
 
-        <article class="panel">
-          <h2>Next Setup Step</h2>
-          <p>Place the Kaggle CSV files in <code>data/raw/</code> and run <code>python scripts/csv_to_rdf.py</code>.</p>
-        </article>
-      </section>
-    </main>
-  </body>
-</html>
+  .section-card-arrow {
+    display: inline-block;
+    margin-top: 1rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--red);
+  }
 
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* ── Status bar ─────────────────────────────────────────── */
+  .status-bar {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.88rem;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .status-dot.ok    { background: #10b981; box-shadow: 0 0 6px #10b981; }
+  .status-dot.error { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+  .status-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--grey);
+  }
+
+  .status-value { color: var(--white); }
+  .status-sep { color: var(--grey-d); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="hero">
+  <p class="hero-eyebrow">Formula 1 Data Explorer</p>
+  <h1 class="hero-title">BEYOND<br>THE <em>LIMIT</em></h1>
+  <p class="hero-lead">
+    75 seasons. 861 drivers. 1,125 races. Every result, qualifying session,
+    pit stop and lap time — all in one knowledge graph.
+  </p>
+  <span class="hero-badge">&#9679; Live data from GraphDB</span>
+</section>
+
+<!-- Stats -->
+<div class="stat-grid">
+  {% for stat in stats %}
+  <div class="stat-card">
+    <div class="stat-value">{{ stat.value }}</div>
+    <div class="stat-label">{{ stat.label }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Section cards -->
+<div class="cards-grid">
+
+  <a href="{% url 'championship:drivers' %}" class="nav-card">
+    <div class="section-card">
+      <span class="section-card-icon">&#127941;</span>
+      <div class="section-card-title">Drivers</div>
+      <p class="section-card-desc">Career stats, race results, lap times and championship titles for every driver.</p>
+      <span class="section-card-arrow">Explore &rsaquo;</span>
+    </div>
+  </a>
+
+  <a href="{% url 'championship:constructors' %}" class="nav-card">
+    <div class="section-card">
+      <span class="section-card-icon">&#127959;</span>
+      <div class="section-card-title">Constructors</div>
+      <p class="section-card-desc">Teams, their seasons, constructor standings and championship history.</p>
+      <span class="section-card-arrow">Explore &rsaquo;</span>
+    </div>
+  </a>
+
+  <a href="{% url 'championship:seasons' %}" class="nav-card">
+    <div class="section-card">
+      <span class="section-card-icon">&#128197;</span>
+      <div class="section-card-title">Seasons</div>
+      <p class="section-card-desc">Full season breakdowns with race calendars and final standings.</p>
+      <span class="section-card-arrow">Explore &rsaquo;</span>
+    </div>
+  </a>
+
+  <a href="{% url 'championship:races' %}" class="nav-card">
+    <div class="section-card">
+      <span class="section-card-icon">&#127937;</span>
+      <div class="section-card-title">Races</div>
+      <p class="section-card-desc">Race results, qualifying sessions, fastest laps and pit stop data.</p>
+      <span class="section-card-arrow">Explore &rsaquo;</span>
+    </div>
+  </a>
+
+  <a href="{% url 'championship:circuits' %}" class="nav-card">
+    <div class="section-card">
+      <span class="section-card-icon">&#127758;</span>
+      <div class="section-card-title">Circuits</div>
+      <p class="section-card-desc">Every circuit with location, country, altitude and full race history.</p>
+      <span class="section-card-arrow">Explore &rsaquo;</span>
+    </div>
+  </a>
+
+  <a href="{% url 'championship:sparql' %}" class="nav-card">
+    <div class="section-card">
+      <span class="section-card-icon">&#128269;</span>
+      <div class="section-card-title">SPARQL</div>
+      <p class="section-card-desc">Query the knowledge graph directly with custom SPARQL SELECT and UPDATE queries.</p>
+      <span class="section-card-arrow">Explore &rsaquo;</span>
+    </div>
+  </a>
+
+</div>
+
+<!-- GraphDB status -->
+<div class="status-bar">
+  <div class="status-dot {% if graphdb.ok %}ok{% else %}error{% endif %}"></div>
+  <span class="status-label">GraphDB</span>
+  {% if graphdb.ok %}
+    <span class="status-value">Connected</span>
+    <span class="status-sep">&mdash;</span>
+    <span class="status-value"><strong>{{ graphdb.triple_count }}</strong> triples</span>
+    <span class="status-sep">&mdash;</span>
+    <span style="color:var(--grey);font-size:0.82rem;"><code>{{ graphdb.endpoint }}</code></span>
+  {% else %}
+    <span style="color:var(--red);">Unavailable &mdash; {{ graphdb.error }}</span>
+  {% endif %}
+</div>
+
+{% endblock %}

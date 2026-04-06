@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import Any
+from typing import IO, Any
 from urllib.parse import quote
 
 import pandas as pd
-from rdflib import Graph, Literal, Namespace, URIRef
+from rdflib import Literal, Namespace, URIRef
 from rdflib.namespace import RDF, RDFS, XSD
 
 RESOURCE = Namespace("http://example.org/resource/")
@@ -241,8 +241,6 @@ def has_value(value: object) -> bool:
 def infer_datatype(column: str) -> URIRef | None:
     if column == "year":
         return XSD.gYear
-    if column in URI_COLUMNS:
-        return XSD.anyURI
     if column in DATE_COLUMNS:
         return XSD.date
     if column in INTEGER_COLUMNS or column.endswith("Id"):
@@ -254,15 +252,29 @@ def infer_datatype(column: str) -> URIRef | None:
     return None
 
 
-def add_literal(graph: Graph, subject: URIRef, column: str, value: object) -> None:
+def _nt_uri(uri: URIRef) -> str:
+    return f"<{uri}>"
+
+
+def _nt_literal(lit: Literal) -> str:
+    escaped = str(lit).replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n").replace("\r", "\\r")
+    if lit.datatype:
+        return f'"{escaped}"^^<{lit.datatype}>'
+    return f'"{escaped}"'
+
+
+def emit_literal(out: IO[str], subject: URIRef, column: str, value: object) -> None:
     if not has_value(value):
         return
+    s = _nt_uri(subject)
+    if column in URI_COLUMNS:
+        out.write(f"{s} <{RDFS.seeAlso}> <{str(value).strip()}> .\n")
+        return
     datatype = infer_datatype(column)
-    predicate = predicate_uri(column)
-    if datatype is None:
-        graph.add((subject, predicate, Literal(value)))
-    else:
-        graph.add((subject, predicate, Literal(value, datatype=datatype)))
+    if datatype == XSD.integer:
+        value = int(float(value))
+    lit = Literal(value, datatype=datatype) if datatype else Literal(value)
+    out.write(f"{s} <{predicate_uri(column)}> {_nt_literal(lit)} .\n")
 
 
 def build_row_uri(table_name: str, row: Any) -> URIRef:
@@ -271,7 +283,7 @@ def build_row_uri(table_name: str, row: Any) -> URIRef:
     return build_uri(config["kind"], *parts)
 
 
-def add_label(graph: Graph, table_name: str, subject: URIRef, row: Any) -> None:
+def emit_label(out: IO[str], table_name: str, subject: URIRef, row: Any) -> None:
     if table_name == "seasons":
         label = f"{row.year} Formula 1 season"
     elif table_name == "circuits":
@@ -286,71 +298,80 @@ def add_label(graph: Graph, table_name: str, subject: URIRef, row: Any) -> None:
         label = row.status
     else:
         return
-    graph.add((subject, RDFS.label, Literal(label)))
+    out.write(f"{_nt_uri(subject)} <{RDFS.label}> {_nt_literal(Literal(label))} .\n")
 
 
-def read_csvs(input_dir: Path) -> dict[str, pd.DataFrame]:
-    missing = []
+def read_csvs(input_dir: Path, skip: set[str]) -> dict[str, pd.DataFrame]:
     frames: dict[str, pd.DataFrame] = {}
     for table_name, config in TABLE_CONFIG.items():
+        if table_name in skip:
+            print(f"  Skipping {table_name} (excluded).")
+            continue
         path = input_dir / config["filename"]
         if not path.exists():
-            missing.append(config["filename"])
+            print(f"  Warning: {config['filename']} not found in {input_dir}, skipping.")
             continue
         frames[table_name] = pd.read_csv(path, na_values=["\\N"], keep_default_na=True, low_memory=False)
-    if missing:
-        missing_list = ", ".join(sorted(missing))
-        raise FileNotFoundError(f"Missing expected CSV files in {input_dir}: {missing_list}")
     return frames
 
 
-def convert(frames: dict[str, pd.DataFrame]) -> Graph:
-    graph = Graph()
-    graph.bind("f1", F1)
-    graph.bind("rdf", RDF)
-    graph.bind("rdfs", RDFS)
-    graph.bind("xsd", XSD)
+def emit_row(out: IO[str], table_name: str, config: dict[str, Any], columns: list[str], row: Any) -> None:
+    uri = build_row_uri(table_name, row)
+    subject = _nt_uri(uri)
+    out.write(f"{subject} <{RDF.type}> <{class_uri(config['class_name'])}> .\n")
+    emit_label(out, table_name, uri, row)
+    for column in columns:
+        emit_literal(out, uri, column, getattr(row, column))
+    for column, (target_kind, relation_name) in config["links"].items():
+        value = getattr(row, column)
+        if has_value(value):
+            out.write(f"{subject} <{predicate_uri(relation_name)}> <{build_uri(target_kind, value)}> .\n")
 
+
+def convert(frames: dict[str, pd.DataFrame], out: IO[str]) -> int:
+    total = 0
     for table_name in TABLE_ORDER:
-        frame = frames[table_name]
+        frame = frames.get(table_name)
+        if frame is None:
+            continue
         config = TABLE_CONFIG[table_name]
+        columns = list(frame.columns)
+        print(f"  Converting {table_name} ({len(frame):,} rows)...")
         for row in frame.itertuples(index=False):
-            subject = build_row_uri(table_name, row)
-            graph.add((subject, RDF.type, class_uri(config["class_name"])))
-            add_label(graph, table_name, subject, row)
-
-            for column in frame.columns:
-                add_literal(graph, subject, column, getattr(row, column))
-
-            for column, (target_kind, relation_name) in config["links"].items():
-                value = getattr(row, column)
-                if not has_value(value):
-                    continue
-                object_uri = build_uri(target_kind, value)
-                graph.add((subject, predicate_uri(relation_name), object_uri))
-
-    return graph
+            emit_row(out, table_name, config, columns, row)
+            total += 1
+        print(f"  Done {table_name}.")
+    return total
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Convert the Kaggle Formula 1 CSV dataset into RDF N3.")
+    parser = argparse.ArgumentParser(description="Convert the Kaggle Formula 1 CSV dataset into RDF N-Triples.")
     parser.add_argument("--input-dir", type=Path, default=Path("data/raw"))
-    parser.add_argument("--output", type=Path, default=Path("data/rdf/formula1.n3"))
+    parser.add_argument("--output", type=Path, default=Path("data/rdf/formula1.nt"))
+    parser.add_argument(
+        "--exclude",
+        metavar="TABLE",
+        nargs="*",
+        default=[],
+        help="Table names to skip (e.g. --exclude lap_times pit_stops)",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    try:
-        frames = read_csvs(args.input_dir)
-    except FileNotFoundError as exc:
-        print(str(exc))
+    skip = set(args.exclude)
+    print(f"Reading CSVs from {args.input_dir}...")
+    frames = read_csvs(args.input_dir, skip)
+    if not frames:
+        print(f"No CSV files found in {args.input_dir}.")
         return 1
 
-    graph = convert(frames)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    graph.serialize(destination=args.output, format="n3")
-    print(f"Wrote {len(graph)} triples to {args.output}")
+    print(f"Streaming triples to {args.output}...")
+    with args.output.open("w", encoding="utf-8") as out:
+        rows = convert(frames, out)
+    print(f"Done. Converted {rows:,} rows to {args.output}")
     return 0
 
 

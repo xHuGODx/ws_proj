@@ -1,9 +1,10 @@
+DJANGO_CHEATSHEET.md
 .venv/
 __pycache__/
 *.py[cod]
 *.sqlite3
 .env
 .DS_Store
-data/rdf/formula1.n3
+data/rdf/
 graphdb/ws-formula1-repo.ttl
 graphDB_licence/*.license
