@@ -11,5 +11,4 @@ fi
 
 python scripts/csv_to_rdf.py \
   --input-dir "${1:-data/raw}" \
-  --output "${2:-data/rdf/formula1.ttl}"
-
+  --output "${2:-data/rdf/formula1.n3}"

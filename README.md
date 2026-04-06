@@ -49,6 +49,8 @@ cp .env.example .env
 ./scripts/convert_csv_to_rdf.sh
 ```
 
+This generates `data/rdf/formula1.n3`.
+
 6. Import the generated RDF into GraphDB:
 
 ```bash
@@ -69,8 +71,9 @@ This repository currently provides:
 - environment-driven GraphDB configuration
 - a starter GraphDB client service
 - runnable helper scripts for RDF conversion, GraphDB loading, and the Django dev server
-- a CSV-to-RDF pipeline adapted to the official Kaggle Formula 1 CSV schema
-- an empty `data/raw/` directory for manually added Kaggle CSV files
+- a CSV-to-RDF pipeline adapted to the official Kaggle Formula 1 CSV schema and outputting `N3`
+- the official Kaggle raw CSV dataset in `data/raw/`
+- a generated `N3` export at `data/rdf/formula1.n3`
 - sample SPARQL query files
 - drafted GitHub issues in `docs/github-issues-draft.md`
 

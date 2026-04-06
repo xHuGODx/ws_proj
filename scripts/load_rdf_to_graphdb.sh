@@ -11,7 +11,7 @@ if [[ -f .env ]]; then
   set +a
 fi
 
-RDF_FILE="${1:-data/rdf/formula1.ttl}"
+RDF_FILE="${1:-data/rdf/formula1.n3}"
 GRAPHDB_BASE_URL="${GRAPHDB_BASE_URL:-http://localhost:7200}"
 GRAPHDB_REPOSITORY="${GRAPHDB_REPOSITORY:-ws-formula1}"
 GRAPHDB_GRAPH_URI="${GRAPHDB_GRAPH_URI:-}"
@@ -33,12 +33,23 @@ PY
   ENDPOINT="${ENDPOINT}?context=${CONTEXT}"
 fi
 
+case "$RDF_FILE" in
+  *.n3) RDF_CONTENT_TYPE="text/rdf+n3" ;;
+  *.ttl) RDF_CONTENT_TYPE="text/turtle" ;;
+  *.nt) RDF_CONTENT_TYPE="application/n-triples" ;;
+  *.rdf|*.xml) RDF_CONTENT_TYPE="application/rdf+xml" ;;
+  *)
+    echo "Unsupported RDF serialization for $RDF_FILE" >&2
+    exit 1
+    ;;
+esac
+
 CURL_ARGS=(
   --fail
   --show-error
   --silent
   -X POST
-  -H "Content-Type: text/turtle"
+  -H "Content-Type: ${RDF_CONTENT_TYPE}"
   --data-binary "@${RDF_FILE}"
 )
 
@@ -50,4 +61,3 @@ echo "Loading ${RDF_FILE} into ${ENDPOINT}"
 curl "${CURL_ARGS[@]}" "$ENDPOINT"
 echo
 echo "GraphDB load completed."
-
