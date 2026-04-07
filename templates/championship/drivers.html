@@ -3,20 +3,123 @@
 
 {% block extra_head %}
 <style>
-  /* ── Layout ─────────────────────────────────────────────── */
-  .drivers-layout {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 1.5rem;
-    align-items: start;
+  /* ── Podium display ─────────────────────────────────────── */
+  .podium-section {
+    margin-bottom: 2.5rem;
   }
 
-  @media (max-width: 900px) {
-    .drivers-layout { grid-template-columns: 1fr; }
-    .sidebar { order: -1; }
+  .podium-title {
+    text-align: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-bottom: 1.5rem;
   }
 
-  /* ── Filter bar ─────────────────────────────────────────── */
+  .podium-display {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0.75rem;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .podium-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    flex: 1;
+    max-width: 210px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .podium-slot:hover .podium-info-card { border-color: var(--red); }
+
+  .podium-info-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px 8px 0 0;
+    padding: 1.25rem 1rem 1rem;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+
+  .p1 .podium-info-card { border-top: 3px solid #FFD700; }
+  .p2 .podium-info-card { border-top: 3px solid #C0C0C0; }
+  .p3 .podium-info-card { border-top: 3px solid #CD7F32; }
+
+  .podium-medal-icon { font-size: 2.2rem; display: block; margin-bottom: 0.4rem; }
+
+  .podium-driver-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: var(--white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.1;
+  }
+
+  .podium-driver-nat {
+    font-size: 0.72rem;
+    color: var(--grey);
+    margin: 0.25rem 0 0.6rem;
+    letter-spacing: 0.04em;
+  }
+
+  .podium-win-count {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 2.8rem;
+    line-height: 1;
+  }
+
+  .p1 .podium-win-count { color: #FFD700; }
+  .p2 .podium-win-count { color: #C0C0C0; }
+  .p3 .podium-win-count { color: #CD7F32; }
+
+  .podium-win-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-top: 0.15rem;
+  }
+
+  .podium-step {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 3rem;
+    color: rgba(0, 0, 0, 0.2);
+    border-radius: 0 0 4px 4px;
+  }
+
+  .p1 .podium-step { height: 110px; background: linear-gradient(to bottom, #c8a800, #8a7000); }
+  .p2 .podium-step { height: 80px;  background: linear-gradient(to bottom, #a8a8a8, #686868); }
+  .p3 .podium-step { height: 58px;  background: linear-gradient(to bottom, #a06828, #704818); }
+
+  @media (max-width: 600px) {
+    .podium-display { gap: 0.4rem; }
+    .podium-win-count { font-size: 2rem; }
+    .podium-driver-name { font-size: 0.88rem; }
+    .podium-info-card { padding: 0.75rem 0.5rem 0.75rem; }
+    .podium-medal-icon { font-size: 1.6rem; }
+    .p1 .podium-step { height: 80px; }
+    .p2 .podium-step { height: 58px; }
+    .p3 .podium-step { height: 42px; }
+  }
+
+  /* ── Toolbar ────────────────────────────────────────────── */
   .toolbar {
     display: flex;
     flex-wrap: nowrap;
@@ -26,9 +129,7 @@
     overflow-x: auto;
   }
 
-  /* ── Medal radio buttons ────────────────────────────────── */
   .medal-filters { display: flex; gap: 0.3rem; flex-wrap: nowrap; align-items: center; flex-shrink: 0; }
-
   .medal-rb { position: absolute; opacity: 0; width: 0; height: 0; }
 
   .medal-label {
@@ -48,18 +149,14 @@
     cursor: pointer;
     transition: border-color 0.15s, color 0.15s, background 0.15s;
     user-select: none;
+    white-space: nowrap;
   }
 
   .medal-rb.gold:checked   + .medal-label { background: #8a6400; border-color: #FFD700; color: #FFD700; }
   .medal-rb.silver:checked + .medal-label { background: #444;    border-color: #C0C0C0; color: #C0C0C0; }
   .medal-rb.bronze:checked + .medal-label { background: #5a3a10; border-color: #CD7F32; color: #CD7F32; }
 
-  .medal-sep {
-    width: 1px;
-    height: 1.5rem;
-    background: var(--line);
-    margin: 0 0.2rem;
-  }
+  .medal-sep { width: 1px; height: 1.5rem; background: var(--line); margin: 0 0.2rem; flex-shrink: 0; }
 
   .toolbar input[type="search"],
   .toolbar select {
@@ -71,13 +168,11 @@
     font-family: 'Barlow', sans-serif;
     font-size: 0.88rem;
     width: 140px;
+    flex-shrink: 0;
   }
 
   .toolbar input[type="search"]::placeholder { color: var(--grey); }
-  .toolbar input:focus, .toolbar select:focus {
-    outline: none;
-    border-color: var(--red);
-  }
+  .toolbar input:focus, .toolbar select:focus { outline: none; border-color: var(--red); }
 
   .toolbar .result-count {
     font-family: 'Barlow Condensed', sans-serif;
@@ -85,14 +180,7 @@
     color: var(--grey);
     letter-spacing: 0.05em;
     white-space: nowrap;
-  }
-
-  .toolbar-row {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 0.6rem;
-    align-items: center;
-    width: 100%;
+    margin-left: auto;
   }
 
   /* ── Table ──────────────────────────────────────────────── */
@@ -104,7 +192,6 @@
   }
 
   table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-
   thead tr { border-bottom: 2px solid var(--red); background: var(--dark); }
 
   th {
@@ -119,14 +206,7 @@
     white-space: nowrap;
   }
 
-  th a {
-    color: inherit;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-  }
-
+  th a { color: inherit; text-decoration: none; display: flex; align-items: center; gap: 0.3rem; }
   th a:hover { color: var(--white); }
   th.active-sort a { color: var(--red); }
 
@@ -159,8 +239,6 @@
     letter-spacing: 0.08em;
   }
 
-  .flag { font-size: 1.1rem; }
-
   .wins-cell {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 800;
@@ -175,6 +253,7 @@
     justify-content: center;
     margin-top: 1.25rem;
     flex-wrap: wrap;
+    align-items: center;
   }
 
   .page-btn {
@@ -198,93 +277,8 @@
   .page-btn:hover { border-color: var(--red); color: var(--red); }
   .page-btn.current { background: var(--red); color: #fff; border-color: var(--red); }
   .page-btn.disabled { opacity: 0.35; pointer-events: none; }
-
-  /* ── Sidebar: Podium ────────────────────────────────────── */
-  .sidebar { display: flex; flex-direction: column; gap: 1rem; }
-
-  .podium-card {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  .podium-card-header {
-    background: var(--dark);
-    border-bottom: 2px solid var(--red);
-    padding: 0.7rem 1rem;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 800;
-    font-size: 0.8rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--grey);
-  }
-
-  .podium-entry {
-    display: flex;
-    align-items: center;
-    gap: 0.9rem;
-    padding: 0.85rem 1rem;
-    border-bottom: 1px solid var(--line);
-    text-decoration: none;
-    color: inherit;
-    transition: background 0.15s;
-  }
-
-  .podium-entry:last-child { border-bottom: none; }
-  .podium-entry:hover { background: var(--panel-l); }
-
-  .podium-rank {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 1.6rem;
-    line-height: 1;
-    min-width: 1.8rem;
-    text-align: center;
-  }
-
-  .rank-1 { color: #FFD700; }
-  .rank-2 { color: #C0C0C0; }
-  .rank-3 { color: #CD7F32; }
-
-  .podium-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--dark);
-    border: 2px solid var(--line);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    flex-shrink: 0;
-  }
-
-  .podium-info { flex: 1; min-width: 0; }
-
-  .podium-name {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.95rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: var(--white);
-  }
-
-  .podium-stat {
-    font-size: 0.75rem;
-    color: var(--grey);
-    margin-top: 0.1rem;
-  }
-
-  .podium-wins {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 900;
-    font-size: 1.4rem;
-    color: var(--red);
-  }
+  .page-btn.skip { font-size: 0.75rem; letter-spacing: 0.03em; }
+  .page-sep { color: var(--grey); font-size: 0.8rem; opacity: 0.5; }
 </style>
 {% endblock %}
 
@@ -293,148 +287,185 @@
 <h1 class="page-title">Drivers</h1>
 <p class="page-subtitle">{{ total }} driver{{ total|pluralize }} &mdash; page {{ page }} of {{ total_pages }}</p>
 
-<div class="drivers-layout">
+<!-- ── Podium ───────────────────────────────────────────────── -->
+{% if podium|length >= 3 %}
+<section class="podium-section">
+  <div class="podium-title">&#127942; All-time wins leaders</div>
+  <div class="podium-display">
 
-  <!-- ── Main column ─────────────────────────────────────── -->
-  <div>
-    <!-- Toolbar -->
-    <form method="get" class="toolbar">
-      <input type="search" name="q" placeholder="Search by name or code…" value="{{ q }}" autocomplete="off">
-
-      <select name="nationality">
-        <option value="">All nationalities</option>
-        {% for nat in nationalities %}
-          <option value="{{ nat }}" {% if nat == nationality %}selected{% endif %}>{{ nat }}</option>
-        {% endfor %}
-      </select>
-
-      <div class="medal-sep"></div>
-
-      <div class="medal-filters">
-        <input class="medal-rb gold"   type="radio" name="medal" value="gold"   id="rb-gold"   {% if medal == 'gold'   %}checked{% endif %}>
-        <label class="medal-label" for="rb-gold">&#129351; Gold</label>
-
-        <input class="medal-rb silver" type="radio" name="medal" value="silver" id="rb-silver" {% if medal == 'silver' %}checked{% endif %}>
-        <label class="medal-label" for="rb-silver">&#129352; Silver</label>
-
-        <input class="medal-rb bronze" type="radio" name="medal" value="bronze" id="rb-bronze" {% if medal == 'bronze' %}checked{% endif %}>
-        <label class="medal-label" for="rb-bronze">&#129353; Bronze</label>
+    <!-- 2nd place -->
+    <a class="podium-slot p2" href="{% url 'championship:driver_detail' podium.1.id %}">
+      <div class="podium-info-card">
+        <span class="podium-medal-icon">&#129352;</span>
+        <div class="podium-driver-name">{{ podium.1.label }}</div>
+        <div class="podium-driver-nat">{{ podium.1.nationality }}</div>
+        <div class="podium-win-count">{{ podium.1.wins }}</div>
+        <div class="podium-win-label">Victories</div>
       </div>
+      <div class="podium-step">2</div>
+    </a>
 
-      <div class="medal-sep"></div>
+    <!-- 1st place -->
+    <a class="podium-slot p1" href="{% url 'championship:driver_detail' podium.0.id %}">
+      <div class="podium-info-card">
+        <span class="podium-medal-icon">&#129351;</span>
+        <div class="podium-driver-name">{{ podium.0.label }}</div>
+        <div class="podium-driver-nat">{{ podium.0.nationality }}</div>
+        <div class="podium-win-count">{{ podium.0.wins }}</div>
+        <div class="podium-win-label">Victories</div>
+      </div>
+      <div class="podium-step">1</div>
+    </a>
 
-      <input type="hidden" name="sort"  value="{{ sort }}">
-      <input type="hidden" name="order" value="{{ order }}">
+    <!-- 3rd place -->
+    <a class="podium-slot p3" href="{% url 'championship:driver_detail' podium.2.id %}">
+      <div class="podium-info-card">
+        <span class="podium-medal-icon">&#129353;</span>
+        <div class="podium-driver-name">{{ podium.2.label }}</div>
+        <div class="podium-driver-nat">{{ podium.2.nationality }}</div>
+        <div class="podium-win-count">{{ podium.2.wins }}</div>
+        <div class="podium-win-label">Victories</div>
+      </div>
+      <div class="podium-step">3</div>
+    </a>
 
-      <button type="submit" class="btn btn-primary">Filter</button>
-      <a href="{% url 'championship:drivers' %}" class="btn btn-secondary">Reset</a>
+  </div>
+</section>
+{% endif %}
 
-      <span class="result-count">{{ total }} result{{ total|pluralize }}</span>
-    </form>
+<!-- ── Toolbar ──────────────────────────────────────────────── -->
+<form method="get" class="toolbar">
+  <input type="search" name="q" placeholder="Search by name or code…" value="{{ q }}" autocomplete="off">
 
-    <!-- Table -->
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th class="{% if sort == 'label' %}active-sort{% endif %}">
-              <a href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort=label&order={% if sort == 'label' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
-                Driver {% if sort == 'label' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
-              </a>
-            </th>
-            <th>Nationality</th>
-            <th class="{% if sort == 'born' %}active-sort{% endif %}">
-              <a href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort=born&order={% if sort == 'born' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
-                Born {% if sort == 'born' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
-              </a>
-            </th>
-            <th class="{% if sort == 'races' %}active-sort{% endif %}">
-              <a href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort=races&order={% if sort == 'races' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
-                Races {% if sort == 'races' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
-              </a>
-            </th>
-            <th class="{% if sort == 'podiums' %}active-sort{% endif %}">
-              <a href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort=podiums&order={% if sort == 'podiums' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
-                Podiums {% if medal == 'gold' %}&#129351;{% elif medal == 'silver' %}&#129352;{% elif medal == 'bronze' %}&#129353;{% endif %}
-                {% if sort == 'podiums' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
-              </a>
-            </th>
-            <th class="{% if sort == 'wins' %}active-sort{% endif %}">
-              <a href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort=wins&order={% if sort == 'wins' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
-                Wins {% if sort == 'wins' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
-              </a>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for d in drivers %}
-          <tr onclick="location.href='{% url 'championship:driver_detail' d.id %}'">
-            <td style="color:var(--grey);font-size:0.8rem;">{{ forloop.counter0|add:page|add:"-1" }}</td>
-            <td>
-              <a class="driver-name" href="{% url 'championship:driver_detail' d.id %}">{{ d.label }}</a>
-              {% if d.code %}<span class="driver-code">{{ d.code }}</span>{% endif %}
-            </td>
-            <td style="color:var(--grey);">{{ d.nationality }}</td>
-            <td style="color:var(--grey);">{{ d.born|default:"—" }}</td>
-            <td>{{ d.races }}</td>
-            <td>
-              {% if d.podiums > 0 %}
-                <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;">{{ d.podiums }}</span>
-                {% if medal == 'gold' and d.wins %}
-                  <span style="font-size:0.8rem;color:#FFD700;margin-left:0.3rem;">({{ d.wins }})</span>
-                {% elif medal == 'silver' and d.seconds %}
-                  <span style="font-size:0.8rem;color:#C0C0C0;margin-left:0.3rem;">({{ d.seconds }})</span>
-                {% elif medal == 'bronze' and d.thirds %}
-                  <span style="font-size:0.8rem;color:#CD7F32;margin-left:0.3rem;">({{ d.thirds }})</span>
-                {% endif %}
-              {% else %}
-                <span style="color:var(--grey);">—</span>
-              {% endif %}
-            </td>
-            <td class="wins-cell">{% if d.wins > 0 %}{{ d.wins }}{% else %}<span style="color:var(--grey);">—</span>{% endif %}</td>
-          </tr>
-          {% empty %}
-          <tr><td colspan="6" style="text-align:center;color:var(--grey);padding:2rem;">No drivers found.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+  <select name="nationality">
+    <option value="">All nationalities</option>
+    {% for nat in nationalities %}
+      <option value="{{ nat }}" {% if nat == nationality %}selected{% endif %}>{{ nat }}</option>
+    {% endfor %}
+  </select>
 
-    <!-- Pagination -->
-    {% if total_pages > 1 %}
-    <nav class="pagination" aria-label="Pages">
-      <a class="page-btn {% if page == 1 %}disabled{% endif %}"
-         href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort={{ sort }}&order={{ order }}&page={{ page|add:'-1' }}">&laquo;</a>
+  <div class="medal-sep"></div>
 
-      {% for p in page_range %}
-        <a class="page-btn {% if p == page %}current{% endif %}"
-           href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort={{ sort }}&order={{ order }}&page={{ p }}">{{ p }}</a>
-      {% endfor %}
+  <div class="medal-filters">
+    <input class="medal-rb gold"   type="radio" name="medal" value="gold"   id="rb-gold"   {% if medal == 'gold'   %}checked{% endif %}>
+    <label class="medal-label" for="rb-gold">&#129351; Gold</label>
 
-      <a class="page-btn {% if page == total_pages %}disabled{% endif %}"
-         href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort={{ sort }}&order={{ order }}&page={{ page|add:'1' }}">&raquo;</a>
-    </nav>
-    {% endif %}
+    <input class="medal-rb silver" type="radio" name="medal" value="silver" id="rb-silver" {% if medal == 'silver' %}checked{% endif %}>
+    <label class="medal-label" for="rb-silver">&#129352; Silver</label>
+
+    <input class="medal-rb bronze" type="radio" name="medal" value="bronze" id="rb-bronze" {% if medal == 'bronze' %}checked{% endif %}>
+    <label class="medal-label" for="rb-bronze">&#129353; Bronze</label>
   </div>
 
-  <!-- ── Sidebar ──────────────────────────────────────────── -->
-  <aside class="sidebar">
-    <div class="podium-card">
-      <div class="podium-card-header">&#127942; All-time wins leaders</div>
-      {% for d in podium %}
-      <a class="podium-entry" href="{% url 'championship:driver_detail' d.id %}">
-        <span class="podium-rank rank-{{ forloop.counter }}">{{ forloop.counter }}</span>
-        <div class="podium-avatar">&#128100;</div>
-        <div class="podium-info">
-          <div class="podium-name">{{ d.label }}</div>
-          <div class="podium-stat">{{ d.nationality }} &middot; {{ d.races }} races</div>
-        </div>
-        <span class="podium-wins">{{ d.wins }}</span>
-      </a>
-      {% endfor %}
-    </div>
-  </aside>
+  <div class="medal-sep"></div>
 
+  <input type="hidden" name="sort"  value="{{ sort }}">
+  <input type="hidden" name="order" value="{{ order }}">
+
+  <button type="submit" class="btn btn-primary">Filter</button>
+  <a href="{% url 'championship:drivers' %}" class="btn btn-secondary">Reset</a>
+
+  <span class="result-count">{{ total }} result{{ total|pluralize }}</span>
+</form>
+
+<!-- ── Table ────────────────────────────────────────────────── -->
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th class="{% if sort == 'label' %}active-sort{% endif %}">
+          <a href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort=label&order={% if sort == 'label' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
+            Driver {% if sort == 'label' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+          </a>
+        </th>
+        <th>Nationality</th>
+        <th class="{% if sort == 'born' %}active-sort{% endif %}">
+          <a href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort=born&order={% if sort == 'born' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
+            Born {% if sort == 'born' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+          </a>
+        </th>
+        <th class="{% if sort == 'races' %}active-sort{% endif %}">
+          <a href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort=races&order={% if sort == 'races' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
+            Races {% if sort == 'races' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+          </a>
+        </th>
+        <th class="{% if sort == 'podiums' %}active-sort{% endif %}">
+          <a href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort=podiums&order={% if sort == 'podiums' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
+            Podiums {% if medal == 'gold' %}&#129351;{% elif medal == 'silver' %}&#129352;{% elif medal == 'bronze' %}&#129353;{% endif %}
+            {% if sort == 'podiums' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+          </a>
+        </th>
+        <th class="{% if sort == 'wins' %}active-sort{% endif %}">
+          <a href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort=wins&order={% if sort == 'wins' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
+            Wins {% if sort == 'wins' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+          </a>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in drivers %}
+      <tr onclick="location.href='{% url 'championship:driver_detail' d.id %}'">
+        <td style="color:var(--grey);font-size:0.8rem;">{{ offset|add:forloop.counter }}</td>
+        <td>
+          <a class="driver-name" href="{% url 'championship:driver_detail' d.id %}">{{ d.label }}</a>
+          {% if d.code %}<span class="driver-code">{{ d.code }}</span>{% endif %}
+        </td>
+        <td style="color:var(--grey);">{{ d.nationality }}</td>
+        <td style="color:var(--grey);">{{ d.born|default:"—" }}</td>
+        <td>{{ d.races }}</td>
+        <td>
+          {% if d.podiums > 0 %}
+            <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;">{{ d.podiums }}</span>
+            {% if medal == 'gold' and d.wins %}
+              <span style="font-size:0.8rem;color:#FFD700;margin-left:0.3rem;">({{ d.wins }})</span>
+            {% elif medal == 'silver' and d.seconds %}
+              <span style="font-size:0.8rem;color:#C0C0C0;margin-left:0.3rem;">({{ d.seconds }})</span>
+            {% elif medal == 'bronze' and d.thirds %}
+              <span style="font-size:0.8rem;color:#CD7F32;margin-left:0.3rem;">({{ d.thirds }})</span>
+            {% endif %}
+          {% else %}
+            <span style="color:var(--grey);">—</span>
+          {% endif %}
+        </td>
+        <td class="wins-cell">{% if d.wins > 0 %}{{ d.wins }}{% else %}<span style="color:var(--grey);">—</span>{% endif %}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" style="text-align:center;color:var(--grey);padding:2rem;">No drivers found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
+
+<!-- ── Pagination ───────────────────────────────────────────── -->
+{% if total_pages > 1 %}
+<nav class="pagination" aria-label="Pages">
+  {% with base="?q="|add:q|add:"&nationality="|add:nationality %}
+  {% if medal %}{# keep medal param #}{% endif %}
+
+  <a class="page-btn skip {% if page == 1 %}disabled{% endif %}"
+     href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort={{ sort }}&order={{ order }}&page=1"
+     title="First page">&#171;</a>
+
+  <a class="page-btn {% if page == 1 %}disabled{% endif %}"
+     href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort={{ sort }}&order={{ order }}&page={{ page|add:'-1' }}"
+     title="Previous page">&#8249;</a>
+
+  {% for p in page_range %}
+    <a class="page-btn {% if p == page %}current{% endif %}"
+       href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort={{ sort }}&order={{ order }}&page={{ p }}">{{ p }}</a>
+  {% endfor %}
+
+  <a class="page-btn {% if page == total_pages %}disabled{% endif %}"
+     href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort={{ sort }}&order={{ order }}&page={{ page|add:'1' }}"
+     title="Next page">&#8250;</a>
+
+  <a class="page-btn skip {% if page == total_pages %}disabled{% endif %}"
+     href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort={{ sort }}&order={{ order }}&page={{ total_pages }}"
+     title="Last page">&#187;</a>
+
+  {% endwith %}
+</nav>
+{% endif %}
+
 {% endblock %}

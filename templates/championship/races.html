@@ -1,0 +1,447 @@
+{% extends "base.html" %}
+{% block title %}Races{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── Featured card ──────────────────────────────────────── */
+  .featured-card {
+    background: var(--dark);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+
+  .featured-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 4px;
+    background: var(--red);
+    z-index: 1;
+  }
+
+  .featured-header {
+    padding: 1.5rem 1.5rem 1.25rem 2rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .featured-eyebrow {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 0.5rem;
+  }
+
+  .featured-race-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    line-height: 1;
+    color: var(--white);
+    margin-bottom: 0.75rem;
+  }
+
+  .featured-meta-row {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .meta-chip {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--grey);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    padding: 0.2rem 0.65rem;
+    border-radius: 3px;
+  }
+
+  /* ── Mini podium (3 cols) ───────────────────────────────── */
+  .mini-podium {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .mini-slot {
+    background: var(--panel);
+    padding: 1rem 1.25rem;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .mini-slot-icon { font-size: 1.6rem; flex-shrink: 0; line-height: 1.2; }
+
+  .mini-slot-driver {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--white);
+    text-decoration: none;
+    display: block;
+  }
+  .mini-slot-driver:hover { color: var(--red); }
+
+  .mini-slot-team {
+    font-size: 0.78rem;
+    color: var(--grey);
+    margin-top: 0.1rem;
+  }
+
+  .mini-slot-time {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.82rem;
+    color: var(--grey);
+    margin-top: 0.25rem;
+  }
+
+  /* ── Stats row ──────────────────────────────────────────── */
+  .featured-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+  }
+
+  .featured-stat {
+    background: var(--dark);
+    padding: 0.9rem 1.25rem;
+    text-align: center;
+  }
+
+  .featured-stat-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1.6rem;
+    color: var(--white);
+    display: block;
+    line-height: 1;
+  }
+
+  .featured-stat-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-top: 0.3rem;
+  }
+
+  /* ── Toolbar ────────────────────────────────────────────── */
+  .toolbar {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .toolbar input[type="text"],
+  .toolbar select {
+    background: var(--dark);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.85rem;
+    padding: 0.4rem 0.7rem;
+    outline: none;
+  }
+
+  .toolbar input[type="text"]:focus,
+  .toolbar select:focus { border-color: var(--red); }
+
+  .toolbar input[type="text"] { width: 180px; }
+  .toolbar select              { width: 130px; }
+  .toolbar .btn                { white-space: nowrap; }
+
+  /* ── Table ──────────────────────────────────────────────── */
+  .races-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+
+  .races-table thead tr { border-bottom: 2px solid var(--red); background: var(--dark); }
+
+  .races-table th {
+    padding: 0.65rem 1rem;
+    text-align: left;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.73rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey);
+    white-space: nowrap;
+  }
+
+  .races-table td {
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+  }
+
+  .races-table tr:last-child td { border-bottom: none; }
+  .races-table tbody tr:hover td { background: var(--panel-l); cursor: pointer; }
+
+  .race-link {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--white);
+    text-decoration: none;
+  }
+  .race-link:hover { color: var(--red); }
+
+  .circuit-sub { font-size: 0.75rem; color: var(--grey); margin-top: 0.1rem; }
+
+  .year-badge {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    color: var(--white);
+  }
+
+  .winner-link {
+    color: var(--white);
+    text-decoration: none;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+  }
+  .winner-link:hover { color: var(--red); }
+
+  /* ── Pagination ─────────────────────────────────────────── */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 1rem 0 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .pagination a, .pagination span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    border-radius: 4px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-decoration: none;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--grey);
+    padding: 0 0.4rem;
+    transition: all .15s;
+  }
+
+  .pagination a:hover { background: var(--dark); color: var(--white); border-color: var(--red); }
+  .pagination .current { background: var(--red); color: #fff; border-color: var(--red); }
+  .pagination .disabled { opacity: 0.35; pointer-events: none; }
+
+  /* ── Sort link helper ───────────────────────────────────── */
+  .sort-link { color: inherit; text-decoration: none; }
+  .sort-link:hover { color: var(--white); }
+
+  @media (max-width: 700px) {
+    .mini-podium     { grid-template-columns: 1fr; }
+    .featured-stats  { grid-template-columns: repeat(2, 1fr); }
+    .races-table th:nth-child(4),
+    .races-table td:nth-child(4),
+    .races-table th:nth-child(6),
+    .races-table td:nth-child(6) { display: none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Latest Race Featured Card ─────────────────────────────────────────── -->
+{% if featured %}
+<div class="featured-card">
+
+  <div class="featured-header">
+    <div class="featured-eyebrow">
+      Latest Race &nbsp;&middot;&nbsp; Round {{ featured.race.round }} &nbsp;&middot;&nbsp; {{ featured.race.year }}
+    </div>
+    <div class="featured-race-name">{{ featured.race.label }}</div>
+    <div class="featured-meta-row">
+      {% if featured.race.circuit_label %}<span class="meta-chip">{{ featured.race.circuit_label }}</span>{% endif %}
+      {% if featured.race.circuit_country %}<span class="meta-chip">{{ featured.race.circuit_country }}</span>{% endif %}
+      {% if featured.race.date %}<span class="meta-chip">{{ featured.race.date }}</span>{% endif %}
+      <a href="{% url 'championship:race_detail' featured.race.id %}"
+         class="btn btn-secondary"
+         style="font-size:0.8rem;padding:0.25rem 0.9rem;margin-left:0.25rem;">
+        Full Results &rarr;
+      </a>
+    </div>
+  </div>
+
+  <!-- Mini podium -->
+  <div class="mini-podium">
+    {% for p in featured.podium %}
+    <div class="mini-slot">
+      <div class="mini-slot-icon">
+        {% if p.pos == 1 %}&#129351;{% elif p.pos == 2 %}&#129352;{% else %}&#129353;{% endif %}
+      </div>
+      <div>
+        <a class="mini-slot-driver" href="{% url 'championship:driver_detail' p.driver_id %}">{{ p.driver_label }}</a>
+        <div class="mini-slot-team">{{ p.constructor_label }}</div>
+        {% if p.time %}<div class="mini-slot-time">{{ p.time }}</div>{% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="mini-slot" style="grid-column:1/-1;color:var(--grey);font-size:0.9rem;">No results available.</div>
+    {% endfor %}
+  </div>
+
+  <!-- Stats row -->
+  <div class="featured-stats">
+    <div class="featured-stat">
+      <span class="featured-stat-val">{{ featured.entries }}</span>
+      <div class="featured-stat-label">Entries</div>
+    </div>
+    <div class="featured-stat">
+      <span class="featured-stat-val">{{ featured.total_laps|default:"—" }}</span>
+      <div class="featured-stat-label">Total Laps</div>
+    </div>
+    <div class="featured-stat">
+      <span class="featured-stat-val">{{ featured.fastest_lap_time|default:"—" }}</span>
+      <div class="featured-stat-label">
+        Fastest Lap{% if featured.fastest_lap_driver %} &middot; {{ featured.fastest_lap_driver }}{% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endif %}
+
+<!-- ── Toolbar ────────────────────────────────────────────────────────────── -->
+<form method="get" action="">
+  <input type="hidden" name="sort"  value="{{ sort }}">
+  <input type="hidden" name="order" value="{{ order }}">
+  <div class="toolbar">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search races…">
+    <select name="season">
+      <option value="">All Seasons</option>
+      {% for s in seasons %}
+      <option value="{{ s }}" {% if s == season %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary">Filter</button>
+    <a href="{% url 'championship:races' %}" class="btn btn-secondary">Reset</a>
+    <span style="flex:1"></span>
+    <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;color:var(--grey);white-space:nowrap;">
+      {{ total }} race{{ total|pluralize }}
+    </span>
+  </div>
+</form>
+
+<!-- ── Table ──────────────────────────────────────────────────────────────── -->
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:0.5rem;">
+  <table class="races-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>
+          <a class="sort-link" href="?q={{ q }}&season={{ season }}&sort=label&order={% if sort == 'label' and order == 'asc' %}desc{% else %}asc{% endif %}">
+            Race {% if sort == 'label' %}{{ order|yesno:'▼,▲,▲' }}{% endif %}
+          </a>
+        </th>
+        <th>
+          <a class="sort-link" href="?q={{ q }}&season={{ season }}&sort=year&order={% if sort == 'year' and order == 'desc' %}asc{% else %}desc{% endif %}">
+            Season {% if sort == 'year' %}{% if order == 'desc' %}▼{% else %}▲{% endif %}{% endif %}
+          </a>
+        </th>
+        <th>
+          <a class="sort-link" href="?q={{ q }}&season={{ season }}&sort=round&order={% if sort == 'round' and order == 'asc' %}desc{% else %}asc{% endif %}">
+            Rnd {% if sort == 'round' %}{% if order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}
+          </a>
+        </th>
+        <th>Circuit</th>
+        <th>
+          <a class="sort-link" href="?q={{ q }}&season={{ season }}&sort=date&order={% if sort == 'date' and order == 'asc' %}desc{% else %}asc{% endif %}">
+            Date {% if sort == 'date' %}{% if order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}
+          </a>
+        </th>
+        <th>Winner</th>
+        <th>Constructor</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in races %}
+      <tr onclick="location.href='{% url 'championship:race_detail' r.id %}'">
+        <td style="color:var(--grey);font-size:0.8rem;">{{ offset|add:forloop.counter }}</td>
+        <td>
+          <a class="race-link" href="{% url 'championship:race_detail' r.id %}">{{ r.label }}</a>
+        </td>
+        <td><span class="year-badge">{{ r.year }}</span></td>
+        <td style="color:var(--grey);font-family:'Barlow Condensed',sans-serif;font-weight:700;">{{ r.round }}</td>
+        <td>
+          <div style="color:var(--white);font-size:0.88rem;">{{ r.circuit_label }}</div>
+          {% if r.circuit_country %}<div class="circuit-sub">{{ r.circuit_country }}</div>{% endif %}
+        </td>
+        <td style="color:var(--grey);font-size:0.85rem;white-space:nowrap;">{{ r.date }}</td>
+        <td>
+          {% if r.winner_id %}
+          <a class="winner-link" href="{% url 'championship:driver_detail' r.winner_id %}">{{ r.winner_label }}</a>
+          {% else %}<span style="color:var(--grey);">—</span>{% endif %}
+        </td>
+        <td style="font-size:0.82rem;color:var(--grey);">{{ r.constructor_label|default:"—" }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="8" style="text-align:center;color:var(--grey);padding:2rem;">No races found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ── Pagination ─────────────────────────────────────────────────────────── -->
+{% if total_pages > 1 %}
+<div class="pagination">
+  {% if page > 1 %}
+    <a href="?q={{ q }}&season={{ season }}&sort={{ sort }}&order={{ order }}&page=1" title="First">&laquo;</a>
+    <a href="?q={{ q }}&season={{ season }}&sort={{ sort }}&order={{ order }}&page={{ page|add:'-1' }}" title="Prev">&lsaquo;</a>
+  {% else %}
+    <span class="disabled">&laquo;</span>
+    <span class="disabled">&lsaquo;</span>
+  {% endif %}
+
+  {% for pg in page_range %}
+    {% if pg == page %}
+      <span class="current">{{ pg }}</span>
+    {% else %}
+      <a href="?q={{ q }}&season={{ season }}&sort={{ sort }}&order={{ order }}&page={{ pg }}">{{ pg }}</a>
+    {% endif %}
+  {% endfor %}
+
+  {% if page < total_pages %}
+    <a href="?q={{ q }}&season={{ season }}&sort={{ sort }}&order={{ order }}&page={{ page|add:'1' }}" title="Next">&rsaquo;</a>
+    <a href="?q={{ q }}&season={{ season }}&sort={{ sort }}&order={{ order }}&page={{ total_pages }}" title="Last">&raquo;</a>
+  {% else %}
+    <span class="disabled">&rsaquo;</span>
+    <span class="disabled">&raquo;</span>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

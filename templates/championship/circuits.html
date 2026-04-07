@@ -1,0 +1,512 @@
+{% extends "base.html" %}
+{% block title %}Circuits{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── Podium ─────────────────────────────────────────────── */
+  .podium-section { margin-bottom: 2.5rem; }
+
+  .podium-title {
+    text-align: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-bottom: 1.5rem;
+  }
+
+  .podium-display {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0.75rem;
+    max-width: 780px;
+    margin: 0 auto;
+  }
+
+  .podium-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    flex: 1;
+    max-width: 240px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .podium-slot:hover .podium-info-card { border-color: var(--red); }
+
+  .podium-info-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px 8px 0 0;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .p1 .podium-info-card { border-top: 3px solid #FFD700; }
+  .p2 .podium-info-card { border-top: 3px solid #C0C0C0; }
+  .p3 .podium-info-card { border-top: 3px solid #CD7F32; }
+
+  /* Image area — placeholder until real images are provided */
+  .circuit-img-area {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: var(--dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .circuit-img-area img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    inset: 0;
+  }
+
+  .circuit-img-area .img-fallback {
+    line-height: 1;
+  }
+
+  .podium-card-body {
+    padding: 0.9rem 1rem 1rem;
+    text-align: center;
+  }
+
+  .podium-circuit-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--white);
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .podium-circuit-loc {
+    font-size: 0.72rem;
+    color: var(--grey);
+    margin: 0.2rem 0 0.6rem;
+    letter-spacing: 0.04em;
+  }
+
+  .podium-race-count {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 2.5rem;
+    line-height: 1;
+  }
+
+  .p1 .podium-race-count { color: #FFD700; }
+  .p2 .podium-race-count { color: #C0C0C0; }
+  .p3 .podium-race-count { color: #CD7F32; }
+
+  .podium-race-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-top: 0.1rem;
+  }
+
+  .podium-step {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 3rem;
+    color: rgba(0, 0, 0, 0.2);
+    border-radius: 0 0 4px 4px;
+  }
+
+  .p1 .podium-step { height: 110px; background: linear-gradient(to bottom, #c8a800, #8a7000); }
+  .p2 .podium-step { height: 80px;  background: linear-gradient(to bottom, #a8a8a8, #686868); }
+  .p3 .podium-step { height: 58px;  background: linear-gradient(to bottom, #a06828, #704818); }
+
+  @media (max-width: 650px) {
+    .podium-display { gap: 0.4rem; }
+    .podium-race-count { font-size: 1.8rem; }
+    .podium-circuit-name { font-size: 0.85rem; }
+    .p1 .podium-step { height: 80px; }
+    .p2 .podium-step { height: 58px; }
+    .p3 .podium-step { height: 40px; }
+  }
+
+  /* ── Toolbar ────────────────────────────────────────────── */
+  .toolbar {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    align-items: center;
+    overflow-x: auto;
+  }
+
+  .status-filters { display: flex; gap: 0.3rem; flex-wrap: nowrap; align-items: center; flex-shrink: 0; }
+  .status-rb { position: absolute; opacity: 0; width: 0; height: 0; }
+
+  .status-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--grey);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .status-rb.active:checked   + .status-label { background: #1a3a1a; border-color: #4caf50; color: #4caf50; }
+  .status-rb.inactive:checked + .status-label { background: #2a2a2a; border-color: var(--grey); color: var(--white); }
+
+  .filter-sep { width: 1px; height: 1.5rem; background: var(--line); margin: 0 0.2rem; flex-shrink: 0; }
+
+  .toolbar input[type="search"],
+  .toolbar select {
+    padding: 0.45rem 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--panel);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.88rem;
+    width: 150px;
+    flex-shrink: 0;
+  }
+
+  .toolbar input[type="search"]::placeholder { color: var(--grey); }
+  .toolbar input:focus, .toolbar select:focus { outline: none; border-color: var(--red); }
+
+  .toolbar .result-count {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    color: var(--grey);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    margin-left: auto;
+  }
+
+  /* ── Table ──────────────────────────────────────────────── */
+  .table-wrap {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  thead tr { border-bottom: 2px solid var(--red); background: var(--dark); }
+
+  th {
+    padding: 0.7rem 1rem;
+    text-align: left;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey);
+    white-space: nowrap;
+  }
+
+  th a { color: inherit; text-decoration: none; display: flex; align-items: center; gap: 0.3rem; }
+  th a:hover { color: var(--white); }
+  th.active-sort a { color: var(--red); }
+
+  td {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+    color: var(--white);
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--panel-l); }
+
+  .circuit-name-cell {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--white);
+  }
+
+  .circuit-location {
+    font-size: 0.75rem;
+    color: var(--grey);
+    margin-top: 0.1rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 0.04em;
+  }
+
+  .badge-active {
+    display: inline-block;
+    padding: 0.15rem 0.55rem;
+    border-radius: 3px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: #1a3a1a;
+    color: #4caf50;
+    border: 1px solid #4caf50;
+  }
+
+  .badge-inactive {
+    display: inline-block;
+    padding: 0.15rem 0.55rem;
+    border-radius: 3px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--dark);
+    color: var(--grey);
+    border: 1px solid var(--line);
+  }
+
+  .races-cell {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: var(--red);
+  }
+
+  /* ── Pagination ─────────────────────────────────────────── */
+  .pagination {
+    display: flex;
+    gap: 0.35rem;
+    justify-content: center;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.2rem;
+    height: 2.2rem;
+    padding: 0 0.6rem;
+    border-radius: 4px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-decoration: none;
+    color: var(--grey);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+
+  .page-btn:hover { border-color: var(--red); color: var(--red); }
+  .page-btn.current { background: var(--red); color: #fff; border-color: var(--red); }
+  .page-btn.disabled { opacity: 0.35; pointer-events: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h1 class="page-title">Circuits</h1>
+<p class="page-subtitle">{{ total }} circuit{{ total|pluralize }} &mdash; page {{ page }} of {{ total_pages }}</p>
+
+<!-- ── Podium ───────────────────────────────────────────────── -->
+{% if podium|length >= 3 %}
+<section class="podium-section">
+  <div class="podium-title">&#127937; Most raced circuits</div>
+  <div class="podium-display">
+
+    <!-- 2nd place -->
+    <div class="podium-slot p2">
+      <div class="podium-info-card">
+        <div class="circuit-img-area">
+          <span class="img-fallback">&#127937;</span>
+        </div>
+        <div class="podium-card-body">
+          <div class="podium-circuit-name">{{ podium.1.label }}</div>
+          <div class="podium-circuit-loc">{{ podium.1.location }}, {{ podium.1.country }}</div>
+          <div class="podium-race-count">{{ podium.1.races }}</div>
+          <div class="podium-race-label">Races held</div>
+        </div>
+      </div>
+      <div class="podium-step">2</div>
+    </div>
+
+    <!-- 1st place -->
+    <div class="podium-slot p1">
+      <div class="podium-info-card">
+        <div class="circuit-img-area">
+          <span class="img-fallback">&#127937;</span>
+        </div>
+        <div class="podium-card-body">
+          <div class="podium-circuit-name">{{ podium.0.label }}</div>
+          <div class="podium-circuit-loc">{{ podium.0.location }}, {{ podium.0.country }}</div>
+          <div class="podium-race-count">{{ podium.0.races }}</div>
+          <div class="podium-race-label">Races held</div>
+        </div>
+      </div>
+      <div class="podium-step">1</div>
+    </div>
+
+    <!-- 3rd place -->
+    <div class="podium-slot p3">
+      <div class="podium-info-card">
+        <div class="circuit-img-area">
+          <span class="img-fallback">&#127937;</span>
+        </div>
+        <div class="podium-card-body">
+          <div class="podium-circuit-name">{{ podium.2.label }}</div>
+          <div class="podium-circuit-loc">{{ podium.2.location }}, {{ podium.2.country }}</div>
+          <div class="podium-race-count">{{ podium.2.races }}</div>
+          <div class="podium-race-label">Races held</div>
+        </div>
+      </div>
+      <div class="podium-step">3</div>
+    </div>
+
+  </div>
+</section>
+{% endif %}
+
+<!-- ── Toolbar ──────────────────────────────────────────────── -->
+<form method="get" class="toolbar">
+  <input type="search" name="q" placeholder="Search circuit or country…" value="{{ q }}" autocomplete="off">
+
+  <select name="country">
+    <option value="">All countries</option>
+    {% for c in countries %}
+      <option value="{{ c }}" {% if c == country %}selected{% endif %}>{{ c }}</option>
+    {% endfor %}
+  </select>
+
+  <div class="filter-sep"></div>
+
+  <div class="status-filters">
+    <input class="status-rb active"   type="radio" name="status" value="active"   id="rb-active"   {% if status == 'active'   %}checked{% endif %}>
+    <label class="status-label" for="rb-active">&#9679; Active</label>
+
+    <input class="status-rb inactive" type="radio" name="status" value="inactive" id="rb-inactive" {% if status == 'inactive' %}checked{% endif %}>
+    <label class="status-label" for="rb-inactive">&#9675; Inactive</label>
+  </div>
+
+  <div class="filter-sep"></div>
+
+  <input type="hidden" name="sort"  value="{{ sort }}">
+  <input type="hidden" name="order" value="{{ order }}">
+
+  <button type="submit" class="btn btn-primary">Filter</button>
+  <a href="{% url 'championship:circuits' %}" class="btn btn-secondary">Reset</a>
+
+  <span class="result-count">{{ total }} result{{ total|pluralize }}</span>
+</form>
+
+<!-- ── Table ────────────────────────────────────────────────── -->
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th class="{% if sort == 'label' %}active-sort{% endif %}">
+          <a href="?q={{ q }}&country={{ country }}&status={{ status }}&sort=label&order={% if sort == 'label' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
+            Circuit {% if sort == 'label' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+          </a>
+        </th>
+        <th class="{% if sort == 'country' %}active-sort{% endif %}">
+          <a href="?q={{ q }}&country={{ country }}&status={{ status }}&sort=country&order={% if sort == 'country' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
+            Country {% if sort == 'country' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+          </a>
+        </th>
+        <th class="{% if sort == 'first_year' %}active-sort{% endif %}">
+          <a href="?q={{ q }}&country={{ country }}&status={{ status }}&sort=first_year&order={% if sort == 'first_year' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
+            Introduced {% if sort == 'first_year' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+          </a>
+        </th>
+        <th class="{% if sort == 'last_year' %}active-sort{% endif %}">
+          <a href="?q={{ q }}&country={{ country }}&status={{ status }}&sort=last_year&order={% if sort == 'last_year' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
+            Last used {% if sort == 'last_year' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+          </a>
+        </th>
+        <th>Status</th>
+        <th class="{% if sort == 'races' %}active-sort{% endif %}">
+          <a href="?q={{ q }}&country={{ country }}&status={{ status }}&sort=races&order={% if sort == 'races' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
+            Races {% if sort == 'races' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+          </a>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in circuits %}
+      <tr onclick="location.href='{% url 'championship:circuit_detail' c.circuit_id %}'">
+        <td style="color:var(--grey);font-size:0.8rem;">{{ offset|add:forloop.counter }}</td>
+        <td>
+          <a class="circuit-name-cell" style="text-decoration:none;display:block;"
+             href="{% url 'championship:circuit_detail' c.circuit_id %}">{{ c.label }}</a>
+          {% if c.location %}<div class="circuit-location">{{ c.location }}</div>{% endif %}
+        </td>
+        <td style="color:var(--grey);">{{ c.country|default:"—" }}</td>
+        <td style="color:var(--grey);">{{ c.first_year|default:"—" }}</td>
+        <td style="color:var(--grey);">{{ c.last_year|default:"—" }}</td>
+        <td>
+          {% if c.active %}
+            <span class="badge-active">Active</span>
+          {% else %}
+            <span class="badge-inactive">Retired</span>
+          {% endif %}
+        </td>
+        <td class="races-cell">{{ c.races }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" style="text-align:center;color:var(--grey);padding:2rem;">No circuits found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ── Pagination ───────────────────────────────────────────── -->
+{% if total_pages > 1 %}
+<nav class="pagination" aria-label="Pages">
+  <a class="page-btn {% if page == 1 %}disabled{% endif %}"
+     href="?q={{ q }}&country={{ country }}&status={{ status }}&sort={{ sort }}&order={{ order }}&page=1"
+     title="First page">&#171;</a>
+
+  <a class="page-btn {% if page == 1 %}disabled{% endif %}"
+     href="?q={{ q }}&country={{ country }}&status={{ status }}&sort={{ sort }}&order={{ order }}&page={{ page|add:'-1' }}"
+     title="Previous page">&#8249;</a>
+
+  {% for p in page_range %}
+    <a class="page-btn {% if p == page %}current{% endif %}"
+       href="?q={{ q }}&country={{ country }}&status={{ status }}&sort={{ sort }}&order={{ order }}&page={{ p }}">{{ p }}</a>
+  {% endfor %}
+
+  <a class="page-btn {% if page == total_pages %}disabled{% endif %}"
+     href="?q={{ q }}&country={{ country }}&status={{ status }}&sort={{ sort }}&order={{ order }}&page={{ page|add:'1' }}"
+     title="Next page">&#8250;</a>
+
+  <a class="page-btn {% if page == total_pages %}disabled{% endif %}"
+     href="?q={{ q }}&country={{ country }}&status={{ status }}&sort={{ sort }}&order={{ order }}&page={{ total_pages }}"
+     title="Last page">&#187;</a>
+</nav>
+{% endif %}
+
+{% endblock %}

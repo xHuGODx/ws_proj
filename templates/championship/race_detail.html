@@ -1,0 +1,461 @@
+{% extends "base.html" %}
+{% block title %}{{ info.label }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── Hero ─────────────────────────────────────────────── */
+  .hero {
+    background: var(--dark);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: 0; right: -30px; bottom: 0;
+    width: 5px;
+    background: var(--red);
+    transform: skewX(-12deg);
+  }
+
+  .hero-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1;
+    color: var(--white);
+    margin-bottom: 0.6rem;
+  }
+
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .meta-chip {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--grey);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    padding: 0.25rem 0.7rem;
+    border-radius: 3px;
+  }
+
+  .hero-actions { display: flex; gap: 0.75rem; margin-top: 1rem; }
+
+  /* ── Stat tiles ──────────────────────────────────────── */
+  .stat-tiles {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-tile {
+    background: var(--panel);
+    padding: 1.25rem 1rem;
+    text-align: center;
+  }
+
+  .stat-tile-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 2.2rem;
+    line-height: 1;
+    color: var(--white);
+    display: block;
+  }
+
+  .stat-tile-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-top: 0.3rem;
+  }
+
+  /* ── Podium ──────────────────────────────────────────── */
+  .podium {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 1.5rem;
+    background: var(--dark);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .podium-slot {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .podium-info-card {
+    width: 100%;
+    padding: 1.25rem 1rem 1rem;
+    text-align: center;
+    border-top: 3px solid transparent;
+    border-right: 1px solid var(--line);
+    background: var(--panel);
+  }
+
+  .podium-slot:last-child .podium-info-card { border-right: none; }
+
+  .p1 .podium-info-card { border-top-color: #FFD700; }
+  .p2 .podium-info-card { border-top-color: #C0C0C0; }
+  .p3 .podium-info-card { border-top-color: #CD7F32; }
+
+  .podium-medal { font-size: 2rem; display: block; margin-bottom: 0.4rem; }
+
+  .podium-driver {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: var(--white);
+    text-decoration: none;
+    display: block;
+    line-height: 1.1;
+  }
+  .podium-driver:hover { color: var(--red); }
+
+  .podium-team {
+    font-size: 0.78rem;
+    color: var(--grey);
+    margin-top: 0.2rem;
+  }
+
+  .podium-time {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    color: var(--grey);
+    margin-top: 0.4rem;
+  }
+
+  .podium-pts {
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    background: var(--dark);
+    border: 1px solid var(--line);
+    padding: 0.15rem 0.55rem;
+    border-radius: 3px;
+    color: var(--white);
+  }
+
+  .podium-step {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1.5rem;
+    letter-spacing: 0.04em;
+  }
+
+  .step-1 { height: 90px; background: linear-gradient(180deg, #B8860B 0%, #8B6914 100%); color: #FFD700; }
+  .step-2 { height: 65px; background: linear-gradient(180deg, #808080 0%, #606060 100%); color: #C0C0C0; }
+  .step-3 { height: 45px; background: linear-gradient(180deg, #8B5A2B 0%, #6B3E1E 100%); color: #CD7F32; }
+
+  /* ── Section card ────────────────────────────────────── */
+  .section-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-card-head {
+    background: var(--dark);
+    border-bottom: 2px solid var(--red);
+    padding: 0.7rem 1.25rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 0.78rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--grey);
+  }
+
+  /* ── Results table ───────────────────────────────────── */
+  .results-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+
+  .results-table thead tr { border-bottom: 2px solid var(--red); background: var(--dark); }
+
+  .results-table th {
+    padding: 0.65rem 1rem;
+    text-align: left;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.73rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey);
+    white-space: nowrap;
+  }
+
+  .results-table td {
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+    color: var(--white);
+  }
+
+  .results-table tr:last-child td { border-bottom: none; }
+  .results-table tbody tr:hover td { background: rgba(255,255,255,.03); }
+
+  .pos-badge {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+  }
+
+  .pos-badge.p1 { color: #FFD700; }
+  .pos-badge.p2 { color: #C0C0C0; }
+  .pos-badge.p3 { color: #CD7F32; }
+
+  .driver-link {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--white);
+    text-decoration: none;
+  }
+  .driver-link:hover { color: var(--red); }
+
+  .time-cell {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--grey);
+  }
+
+  .pts-cell {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: var(--red);
+  }
+
+  @media (max-width: 750px) {
+    .stat-tiles { grid-template-columns: repeat(2, 1fr); }
+    .podium { flex-direction: column; align-items: stretch; }
+    .podium-slot { flex-direction: row; }
+    .podium-step { width: 60px; height: auto !important; min-height: 50px; }
+    .results-table th:nth-child(4),
+    .results-table td:nth-child(4) { display: none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Back link -->
+<a href="{% url 'championship:races' %}"
+   style="display:inline-flex;align-items:center;gap:0.4rem;color:var(--grey);text-decoration:none;
+          font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:0.85rem;
+          letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1.25rem;">
+  &larr; All Races
+</a>
+
+<!-- ── Hero ──────────────────────────────────────────────────────────────── -->
+<div class="hero">
+  <div class="hero-name">{{ info.label }}</div>
+  <div class="hero-meta">
+    {% if info.circuitLabel %}<span class="meta-chip">{{ info.circuitLabel }}</span>{% endif %}
+    {% if info.circuitCountry %}<span class="meta-chip">{{ info.circuitCountry }}</span>{% endif %}
+    {% if info.date %}<span class="meta-chip">{{ info.date }}</span>{% endif %}
+    {% if info.round %}<span class="meta-chip">Round {{ info.round }}</span>{% endif %}
+    {% if info.year %}<span class="meta-chip">{{ info.year }} Season</span>{% endif %}
+  </div>
+  <div class="hero-actions">
+    {% if wiki_url %}
+    <a href="{{ wiki_url }}" target="_blank" rel="noopener" class="btn btn-secondary">Wikipedia &rarr;</a>
+    {% endif %}
+    {% if info.circuitId %}
+    <a href="{% url 'championship:circuit_detail' info.circuitId %}" class="btn btn-secondary">Circuit Page &rarr;</a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── Stat Tiles ─────────────────────────────────────────────────────────── -->
+<div class="stat-tiles">
+  <div class="stat-tile">
+    <span class="stat-tile-val">{{ entries }}</span>
+    <div class="stat-tile-label">Entries</div>
+  </div>
+  <div class="stat-tile">
+    <span class="stat-tile-val">{{ total_laps|default:"—" }}</span>
+    <div class="stat-tile-label">Race Laps</div>
+  </div>
+  <div class="stat-tile">
+    <span class="stat-tile-val" style="font-size:1.5rem;">{{ fastest.fastestLapTime|default:"—" }}</span>
+    <div class="stat-tile-label">Fastest Lap</div>
+  </div>
+  <div class="stat-tile">
+    <span class="stat-tile-val" style="font-size:1.2rem;">{{ fastest.driverLabel|default:"—" }}</span>
+    <div class="stat-tile-label">Fastest Driver</div>
+  </div>
+</div>
+
+<!-- ── Podium ─────────────────────────────────────────────────────────────── -->
+{% if p1 or p2 or p3 %}
+<div class="podium">
+
+  <!-- 2nd place -->
+  {% if p2 %}
+  <div class="podium-slot p2">
+    <div class="podium-info-card">
+      <span class="podium-medal">&#129352;</span>
+      <a class="podium-driver" href="{% url 'championship:driver_detail' p2.driver_id %}">{{ p2.driver_label }}</a>
+      <div class="podium-team">{{ p2.constructor_label }}</div>
+      {% if p2.time %}<div class="podium-time">{{ p2.time }}</div>{% endif %}
+      {% if p2.points %}<div class="podium-pts">{{ p2.points }} pts</div>{% endif %}
+    </div>
+    <div class="podium-step step-2">2<sup style="font-size:0.6em">nd</sup></div>
+  </div>
+  {% endif %}
+
+  <!-- 1st place -->
+  {% if p1 %}
+  <div class="podium-slot p1">
+    <div class="podium-info-card">
+      <span class="podium-medal">&#129351;</span>
+      <a class="podium-driver" href="{% url 'championship:driver_detail' p1.driver_id %}">{{ p1.driver_label }}</a>
+      <div class="podium-team">{{ p1.constructor_label }}</div>
+      {% if p1.time %}<div class="podium-time">{{ p1.time }}</div>{% endif %}
+      {% if p1.points %}<div class="podium-pts">{{ p1.points }} pts</div>{% endif %}
+    </div>
+    <div class="podium-step step-1">1<sup style="font-size:0.6em">st</sup></div>
+  </div>
+  {% endif %}
+
+  <!-- 3rd place -->
+  {% if p3 %}
+  <div class="podium-slot p3">
+    <div class="podium-info-card">
+      <span class="podium-medal">&#129353;</span>
+      <a class="podium-driver" href="{% url 'championship:driver_detail' p3.driver_id %}">{{ p3.driver_label }}</a>
+      <div class="podium-team">{{ p3.constructor_label }}</div>
+      {% if p3.time %}<div class="podium-time">{{ p3.time }}</div>{% endif %}
+      {% if p3.points %}<div class="podium-pts">{{ p3.points }} pts</div>{% endif %}
+    </div>
+    <div class="podium-step step-3">3<sup style="font-size:0.6em">rd</sup></div>
+  </div>
+  {% endif %}
+
+</div>
+{% endif %}
+
+<!-- ── Race Results ────────────────────────────────────────────────────────── -->
+<div class="section-card">
+  <div class="section-card-head">&#127937; Race Results</div>
+  <table class="results-table">
+    <thead>
+      <tr>
+        <th>Pos</th>
+        <th>Driver</th>
+        <th>Constructor</th>
+        <th>Grid</th>
+        <th>Laps</th>
+        <th>Time / Status</th>
+        <th>Pts</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in results %}
+      <tr>
+        <td>
+          <span class="pos-badge {% if r.pos == 1 %}p1{% elif r.pos == 2 %}p2{% elif r.pos == 3 %}p3{% endif %}">
+            {{ r.pos }}
+          </span>
+        </td>
+        <td>
+          <a class="driver-link" href="{% url 'championship:driver_detail' r.driver_id %}">{{ r.driver_label }}</a>
+        </td>
+        <td style="color:var(--grey);font-size:0.85rem;">{{ r.constructor_label }}</td>
+        <td style="color:var(--grey);font-family:'Barlow Condensed',sans-serif;font-weight:600;">
+          {{ r.grid|default:"—" }}
+        </td>
+        <td style="color:var(--grey);">{{ r.laps|default:"—" }}</td>
+        <td class="time-cell">{{ r.time|default:"—" }}</td>
+        <td class="pts-cell">
+          {% if r.points and r.points != "0" and r.points != "0.0" %}
+            {{ r.points }}
+          {% else %}
+            <span style="color:var(--grey);font-weight:400;">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="7" style="text-align:center;color:var(--grey);padding:2rem;">No results available.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ── Qualifying Results ─────────────────────────────────────────────────── -->
+{% if qualifying %}
+<div class="section-card">
+  <div class="section-card-head">&#9203; Qualifying</div>
+  <table class="results-table">
+    <thead>
+      <tr>
+        <th>Pos</th>
+        <th>Driver</th>
+        <th>Constructor</th>
+        <th>Q1</th>
+        <th>Q2</th>
+        <th>Q3</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for q in qualifying %}
+      <tr>
+        <td>
+          <span class="pos-badge {% if q.position == '1' %}p1{% elif q.position == '2' %}p2{% elif q.position == '3' %}p3{% endif %}">
+            {{ q.position }}
+          </span>
+        </td>
+        <td>
+          <a class="driver-link" href="{% url 'championship:driver_detail' q.driverId %}">{{ q.driverLabel }}</a>
+        </td>
+        <td style="color:var(--grey);font-size:0.85rem;">{{ q.constructorLabel|default:"—" }}</td>
+        <td class="time-cell">{{ q.q1|default:"—" }}</td>
+        <td class="time-cell">{{ q.q2|default:"—" }}</td>
+        <td class="time-cell">{{ q.q3|default:"—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% endblock %}

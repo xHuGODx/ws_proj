@@ -1,0 +1,374 @@
+{% extends "base.html" %}
+{% block title %}{{ info.label }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── Hero ─────────────────────────────────────────────── */
+  .hero {
+    background: var(--dark);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: 0; right: -30px; bottom: 0;
+    width: 5px;
+    background: var(--red);
+    transform: skewX(-12deg);
+  }
+
+  .hero-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+    background: var(--panel);
+    border: 3px solid var(--red);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    flex-shrink: 0;
+  }
+
+  .hero-info { flex: 1; }
+
+  .hero-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--white);
+    margin-bottom: 0.4rem;
+  }
+
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
+  }
+
+  .meta-chip {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--grey);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    padding: 0.25rem 0.7rem;
+    border-radius: 3px;
+  }
+
+  .hero-actions { display: flex; gap: 0.75rem; margin-top: 1rem; }
+
+  /* ── Medals row ──────────────────────────────────────── */
+  .medals-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  .medal-card {
+    background: var(--panel);
+    padding: 1.5rem 1rem;
+    text-align: center;
+  }
+
+  .medal-icon { font-size: 2rem; display: block; margin-bottom: 0.4rem; }
+
+  .medal-count {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 2.8rem;
+    line-height: 1;
+    color: var(--white);
+  }
+
+  .medal-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-top: 0.25rem;
+  }
+
+  /* ── Two-column layout ───────────────────────────────── */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (max-width: 750px) {
+    .detail-grid { grid-template-columns: 1fr; }
+    .hero { flex-direction: column; text-align: center; }
+    .hero-meta { justify-content: center; }
+    .hero-actions { justify-content: center; }
+  }
+
+  /* ── Section card ────────────────────────────────────── */
+  .section-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .section-card-head {
+    background: var(--dark);
+    border-bottom: 2px solid var(--red);
+    padding: 0.7rem 1.25rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 0.78rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--grey);
+  }
+
+  /* ── Stats list ──────────────────────────────────────── */
+  .stats-list { list-style: none; }
+
+  .stats-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.7rem 1.25rem;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.9rem;
+  }
+
+  .stats-list li:last-child { border-bottom: none; }
+  .stats-list .stat-key { color: var(--grey); }
+  .stats-list .stat-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--white);
+  }
+
+  /* ── Circuit bars ────────────────────────────────────── */
+  .circuit-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 1.25rem;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.88rem;
+  }
+
+  .circuit-row:last-child { border-bottom: none; }
+  .circuit-name { flex: 1; color: var(--white); }
+
+  .circuit-bar-wrap {
+    width: 80px;
+    height: 6px;
+    background: var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .circuit-bar { height: 100%; background: var(--red); border-radius: 3px; }
+
+  .circuit-count {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--red);
+    min-width: 2rem;
+    text-align: right;
+  }
+
+  /* ── Pilots table ────────────────────────────────────── */
+  .pilots-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+
+  .pilots-table thead tr { border-bottom: 2px solid var(--red); background: var(--dark); }
+
+  .pilots-table th {
+    padding: 0.65rem 1.25rem;
+    text-align: left;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.73rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey);
+    white-space: nowrap;
+  }
+
+  .pilots-table td {
+    padding: 0.65rem 1.25rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+    color: var(--white);
+  }
+
+  .pilots-table tr:last-child td { border-bottom: none; }
+  .pilots-table tbody tr:hover td { background: var(--panel-l); cursor: pointer; }
+
+  .pilot-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--white);
+    text-decoration: none;
+  }
+
+  .pilot-name:hover { color: var(--red); }
+
+  .pilot-years {
+    font-size: 0.78rem;
+    color: var(--grey);
+    margin-top: 0.1rem;
+  }
+
+  .wins-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--red);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Back link -->
+<a href="{% url 'championship:constructors' %}" style="display:inline-flex;align-items:center;gap:0.4rem;color:var(--grey);text-decoration:none;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1.25rem;">
+  &larr; All Constructors
+</a>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-avatar">&#127950;</div>
+  <div class="hero-info">
+    <div class="hero-name">{{ info.label }}</div>
+    <div class="hero-meta">
+      {% if info.nationality %}<span class="meta-chip">{{ info.nationality }}</span>{% endif %}
+      {% if first_year %}<span class="meta-chip">{{ first_year }}{% if last_year and last_year != first_year %} – {{ last_year }}{% endif %}</span>{% endif %}
+      <span class="meta-chip">{{ pilots|length }} pilot{{ pilots|length|pluralize }}</span>
+    </div>
+    <div class="hero-actions">
+      {% if wiki_url %}
+      <a href="{{ wiki_url }}" target="_blank" rel="noopener" class="btn btn-secondary">Wikipedia &rarr;</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Medals -->
+<div class="medals-row">
+  <div class="medal-card">
+    <span class="medal-icon">&#129351;</span>
+    <div class="medal-count" style="color:#FFD700;">{{ wins }}</div>
+    <div class="medal-label">Victories</div>
+  </div>
+  <div class="medal-card">
+    <span class="medal-icon">&#129352;</span>
+    <div class="medal-count" style="color:#C0C0C0;">{{ seconds }}</div>
+    <div class="medal-label">2nd place</div>
+  </div>
+  <div class="medal-card">
+    <span class="medal-icon">&#129353;</span>
+    <div class="medal-count" style="color:#CD7F32;">{{ thirds }}</div>
+    <div class="medal-label">3rd place</div>
+  </div>
+</div>
+
+<!-- Stats + Circuits -->
+<div class="detail-grid">
+
+  <div class="section-card">
+    <div class="section-card-head">Team Statistics</div>
+    <ul class="stats-list">
+      <li><span class="stat-key">Races entered</span>  <span class="stat-val">{{ total_races }}</span></li>
+      <li><span class="stat-key">Victories</span>      <span class="stat-val">{{ wins }}</span></li>
+      <li><span class="stat-key">Podiums</span>        <span class="stat-val">{{ wins|add:seconds|add:thirds }}</span></li>
+      <li><span class="stat-key">Drivers fielded</span><span class="stat-val">{{ pilots|length }}</span></li>
+      <li><span class="stat-key">Win rate</span>
+        <span class="stat-val">
+          {% if total_races > 0 %}{% widthratio wins total_races 100 %}%{% else %}—{% endif %}
+        </span>
+      </li>
+      {% if first_year %}<li><span class="stat-key">Active</span><span class="stat-val">{{ first_year }}{% if last_year and last_year != first_year %} – {{ last_year }}{% endif %}</span></li>{% endif %}
+    </ul>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-head">Most Raced Circuits</div>
+    {% with max_count=circuits.0.count %}
+    {% for c in circuits %}
+    <div class="circuit-row">
+      <span class="circuit-name">{{ c.circuitLabel }}</span>
+      <div class="circuit-bar-wrap">
+        <div class="circuit-bar" style="width:{% widthratio c.count|add:'0' max_count|add:'0' 100 %}%"></div>
+      </div>
+      <span class="circuit-count">{{ c.count }}</span>
+    </div>
+    {% empty %}
+    <div style="padding:1.25rem;color:var(--grey);font-size:0.9rem;">No data.</div>
+    {% endfor %}
+    {% endwith %}
+  </div>
+
+</div>
+
+<!-- Pilots -->
+<div class="section-card">
+  <div class="section-card-head">&#128100; Drivers who competed for {{ info.label }}</div>
+  <table class="pilots-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Driver</th>
+        <th>Active</th>
+        <th>Races</th>
+        <th>Podiums</th>
+        <th>Wins</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in pilots %}
+      <tr onclick="location.href='{% url 'championship:driver_detail' p.id %}'">
+        <td style="color:var(--grey);font-size:0.8rem;">{{ forloop.counter }}</td>
+        <td>
+          <a class="pilot-name" href="{% url 'championship:driver_detail' p.id %}">{{ p.label }}</a>
+          <div class="pilot-years">{{ p.first_year }}{% if p.last_year and p.last_year != p.first_year %} – {{ p.last_year }}{% endif %}</div>
+        </td>
+        <td style="color:var(--grey);">{{ p.first_year }}{% if p.last_year and p.last_year != p.first_year %} – {{ p.last_year }}{% endif %}</td>
+        <td>{{ p.races }}</td>
+        <td>
+          {% if p.podiums > 0 %}{{ p.podiums }}{% else %}<span style="color:var(--grey);">—</span>{% endif %}
+        </td>
+        <td class="wins-val">
+          {% if p.wins > 0 %}{{ p.wins }}{% else %}<span style="color:var(--grey);font-weight:400;">—</span>{% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" style="text-align:center;color:var(--grey);padding:2rem;">No driver data.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
