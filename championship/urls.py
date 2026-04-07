@@ -7,6 +7,7 @@ app_name = "championship"
 urlpatterns = [
     path("", views.home, name="home"),
     path("drivers/", views.drivers, name="drivers"),
+    path("drivers/<str:driver_id>/", views.driver_detail, name="driver_detail"),
     path("constructors/", views.constructors, name="constructors"),
     path("seasons/", views.seasons, name="seasons"),
     path("races/", views.races, name="races"),

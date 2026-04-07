@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import urllib.request
 
 from SPARQLWrapper import JSON, POST, SPARQLWrapper
 
@@ -42,9 +43,14 @@ class GraphDBClient:
         ]
 
     def healthcheck(self) -> dict[str, object]:
+        # Use GraphDB's REST size endpoint — returns a plain integer, very fast.
         try:
-            rows = self.query("SELECT (COUNT(*) AS ?triples) WHERE { ?s ?p ?o . }")
-            triple_count = rows[0]["triples"] if rows else "0"
+            req = urllib.request.Request(
+                f"{self.query_endpoint}/size",
+                headers={"Accept": "text/plain"},
+            )
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                triple_count = f"{int(resp.read().decode().strip()):,}"
             return {"ok": True, "triple_count": triple_count, "endpoint": self.query_endpoint}
         except Exception as exc:  # noqa: BLE001
             return {"ok": False, "error": str(exc), "endpoint": self.query_endpoint}

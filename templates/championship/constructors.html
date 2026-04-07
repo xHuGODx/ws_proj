@@ -1,0 +1,430 @@
+{% extends "base.html" %}
+{% block title %}Constructors{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* ── Layout ─────────────────────────────────────────────── */
+  .constructors-layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  @media (max-width: 900px) {
+    .constructors-layout { grid-template-columns: 1fr; }
+    .sidebar { order: -1; }
+  }
+
+  /* ── Toolbar ────────────────────────────────────────────── */
+  .toolbar {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    align-items: center;
+    overflow-x: auto;
+  }
+
+  .toolbar input[type="search"],
+  .toolbar select {
+    padding: 0.45rem 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--panel);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.88rem;
+    width: 150px;
+  }
+
+  /* ── Medal radio buttons ────────────────────────────────── */
+  .medal-filters { display: flex; gap: 0.3rem; flex-wrap: nowrap; align-items: center; flex-shrink: 0; }
+
+  .medal-rb { position: absolute; opacity: 0; width: 0; height: 0; }
+
+  .medal-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--grey);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    user-select: none;
+  }
+
+  .medal-rb.gold:checked   + .medal-label { background: #8a6400; border-color: #FFD700; color: #FFD700; }
+  .medal-rb.silver:checked + .medal-label { background: #444;    border-color: #C0C0C0; color: #C0C0C0; }
+  .medal-rb.bronze:checked + .medal-label { background: #5a3a10; border-color: #CD7F32; color: #CD7F32; }
+
+  .medal-sep {
+    width: 1px;
+    height: 1.5rem;
+    background: var(--line);
+    margin: 0 0.2rem;
+  }
+
+  .toolbar input[type="search"]::placeholder { color: var(--grey); }
+  .toolbar input:focus, .toolbar select:focus {
+    outline: none;
+    border-color: var(--red);
+  }
+
+  .toolbar .result-count {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    color: var(--grey);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    margin-left: auto;
+  }
+
+  /* ── Table ──────────────────────────────────────────────── */
+  .table-wrap {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+
+  thead tr { border-bottom: 2px solid var(--red); background: var(--dark); }
+
+  th {
+    padding: 0.7rem 1rem;
+    text-align: left;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey);
+    white-space: nowrap;
+  }
+
+  th a {
+    color: inherit;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  th a:hover { color: var(--white); }
+  th.active-sort a { color: var(--red); }
+
+  td {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+    color: var(--white);
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--panel-l); }
+
+  .constructor-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    color: var(--white);
+  }
+
+  .wins-cell {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: var(--red);
+  }
+
+  /* ── Pagination ─────────────────────────────────────────── */
+  .pagination {
+    display: flex;
+    gap: 0.35rem;
+    justify-content: center;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.2rem;
+    height: 2.2rem;
+    padding: 0 0.6rem;
+    border-radius: 4px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-decoration: none;
+    color: var(--grey);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+
+  .page-btn:hover { border-color: var(--red); color: var(--red); }
+  .page-btn.current { background: var(--red); color: #fff; border-color: var(--red); }
+  .page-btn.disabled { opacity: 0.35; pointer-events: none; }
+
+  /* ── Sidebar ────────────────────────────────────────────── */
+  .sidebar { display: flex; flex-direction: column; gap: 1rem; }
+
+  .podium-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .podium-card-header {
+    background: var(--dark);
+    border-bottom: 2px solid var(--red);
+    padding: 0.7rem 1rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--grey);
+  }
+
+  .podium-entry {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--line);
+    color: inherit;
+    transition: background 0.15s;
+  }
+
+  .podium-entry:last-child { border-bottom: none; }
+  .podium-entry:hover { background: var(--panel-l); }
+
+  .podium-rank {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1.6rem;
+    line-height: 1;
+    min-width: 1.8rem;
+    text-align: center;
+  }
+
+  .rank-1 { color: #FFD700; }
+  .rank-2 { color: #C0C0C0; }
+  .rank-3 { color: #CD7F32; }
+
+  .podium-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background: var(--dark);
+    border: 2px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .podium-info { flex: 1; min-width: 0; }
+
+  .podium-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--white);
+  }
+
+  .podium-stat { font-size: 0.75rem; color: var(--grey); margin-top: 0.1rem; }
+
+  .podium-wins {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1.4rem;
+    color: var(--red);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h1 class="page-title">Constructors</h1>
+<p class="page-subtitle">{{ total }} constructor{{ total|pluralize }} &mdash; page {{ page }} of {{ total_pages }}</p>
+
+<div class="constructors-layout">
+
+  <!-- ── Main column ─────────────────────────────────────── -->
+  <div>
+    <!-- Toolbar -->
+    <form method="get" class="toolbar">
+      <input type="search" name="q" placeholder="Search constructor…" value="{{ q }}" autocomplete="off">
+
+      <select name="nationality">
+        <option value="">All nationalities</option>
+        {% for nat in nationalities %}
+          <option value="{{ nat }}" {% if nat == nationality %}selected{% endif %}>{{ nat }}</option>
+        {% endfor %}
+      </select>
+
+      <div class="medal-sep"></div>
+
+      <div class="medal-filters">
+        <input class="medal-rb gold"   type="radio" name="medal" value="gold"   id="rb-gold"   {% if medal == 'gold'   %}checked{% endif %}>
+        <label class="medal-label" for="rb-gold">&#129351; Gold</label>
+
+        <input class="medal-rb silver" type="radio" name="medal" value="silver" id="rb-silver" {% if medal == 'silver' %}checked{% endif %}>
+        <label class="medal-label" for="rb-silver">&#129352; Silver</label>
+
+        <input class="medal-rb bronze" type="radio" name="medal" value="bronze" id="rb-bronze" {% if medal == 'bronze' %}checked{% endif %}>
+        <label class="medal-label" for="rb-bronze">&#129353; Bronze</label>
+      </div>
+
+      <div class="medal-sep"></div>
+
+      <input type="hidden" name="sort"  value="{{ sort }}">
+      <input type="hidden" name="order" value="{{ order }}">
+
+      <button type="submit" class="btn btn-primary">Filter</button>
+      <a href="{% url 'championship:constructors' %}" class="btn btn-secondary">Reset</a>
+
+      <span class="result-count">{{ total }} result{{ total|pluralize }}</span>
+    </form>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th class="{% if sort == 'label' %}active-sort{% endif %}">
+              <a href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort=label&order={% if sort == 'label' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
+                Constructor {% if sort == 'label' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+              </a>
+            </th>
+            
+            <th>Nationality</th>
+            
+            <th class="{% if sort == 'first_year' %}active-sort{% endif %}">
+              <a href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort=first_year&order={% if sort == 'first_year' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
+                Since {% if sort == 'first_year' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+              </a>
+            </th>
+            
+            <th class="{% if sort == 'races' %}active-sort{% endif %}">
+              <a href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort=races&order={% if sort == 'races' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
+                Races {% if sort == 'races' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+              </a>
+            </th>
+            
+            <th class="{% if sort == 'pilots' %}active-sort{% endif %}">
+              <a href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort=pilots&order={% if sort == 'pilots' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
+                Pilots {% if sort == 'pilots' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+              </a>
+            </th>
+            
+            <th class="{% if sort == 'podiums' %}active-sort{% endif %}">
+              <a href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort=podiums&order={% if sort == 'podiums' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
+                Podiums
+                {% if medal == 'gold' %}&#129351;
+                {% elif medal == 'silver' %}&#129352;
+                {% elif medal == 'bronze' %}&#129353;
+                {% endif %}
+                {% if sort == 'podiums' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+              </a>
+            </th>
+            
+            <th class="{% if sort == 'wins' %}active-sort{% endif %}">
+              <a href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort=wins&order={% if sort == 'wins' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
+                Wins {% if sort == 'wins' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
+              </a>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in constructors %}
+          <tr>
+            <td style="color:var(--grey);font-size:0.8rem;">{{ forloop.counter0|add:page|add:"-1" }}</td>
+            <td>
+              <span class="constructor-name">{{ c.label }}</span>
+            </td>
+            <td style="color:var(--grey);">{{ c.nationality }}</td>
+            <td style="color:var(--grey);">{{ c.first_year|default:"—" }}</td>
+            <td>{{ c.races }}</td>
+            <td>{{ c.pilots }}</td>
+            <td>
+              {% if c.podiums > 0 %}
+                <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;">{{ c.podiums }}</span>
+                {% if medal == 'gold' and c.wins %}
+                  <span style="font-size:0.8rem;color:#FFD700;margin-left:0.3rem;">({{ c.wins }})</span>
+                {% elif medal == 'silver' and c.seconds %}
+                  <span style="font-size:0.8rem;color:#C0C0C0;margin-left:0.3rem;">({{ c.seconds }})</span>
+                {% elif medal == 'bronze' and c.thirds %}
+                  <span style="font-size:0.8rem;color:#CD7F32;margin-left:0.3rem;">({{ c.thirds }})</span>
+                {% endif %}
+              {% else %}
+                <span style="color:var(--grey);">—</span>
+              {% endif %}
+            </td>
+            <td class="wins-cell">{% if c.wins > 0 %}{{ c.wins }}{% else %}<span style="color:var(--grey);">—</span>{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" style="text-align:center;color:var(--grey);padding:2rem;">No constructors found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav class="pagination" aria-label="Pages">
+      <a class="page-btn {% if page == 1 %}disabled{% endif %}"
+         href="?q={{ q }}&nationality={{ nationality }}&sort={{ sort }}&order={{ order }}&page={{ page|add:'-1' }}">&laquo;</a>
+
+      {% for p in page_range %}
+        <a class="page-btn {% if p == page %}current{% endif %}"
+           href="?q={{ q }}&nationality={{ nationality }}&sort={{ sort }}&order={{ order }}&page={{ p }}">{{ p }}</a>
+      {% endfor %}
+
+      <a class="page-btn {% if page == total_pages %}disabled{% endif %}"
+         href="?q={{ q }}&nationality={{ nationality }}&sort={{ sort }}&order={{ order }}&page={{ page|add:'1' }}">&raquo;</a>
+    </nav>
+    {% endif %}
+  </div>
+
+  <!-- ── Sidebar ──────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="podium-card">
+      <div class="podium-card-header">&#127942; All-time wins leaders</div>
+      {% for c in podium %}
+      <div class="podium-entry">
+        <span class="podium-rank rank-{{ forloop.counter }}">{{ forloop.counter }}</span>
+        <div class="podium-avatar">&#127941;</div>
+        <div class="podium-info">
+          <div class="podium-name">{{ c.label }}</div>
+          <div class="podium-stat">{{ c.nationality }} &middot; {{ c.races }} races</div>
+        </div>
+        <span class="podium-wins">{{ c.wins }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </aside>
+
+</div>
+{% endblock %}
