@@ -273,6 +273,11 @@
 
 {% block content %}
 
+<div style="margin-bottom:1.5rem;">
+  <h1 style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:clamp(2.2rem,5vw,3.5rem);line-height:1;color:var(--white);margin-bottom:0.35rem;">Races</h1>
+  <p style="color:var(--grey);font-size:0.95rem;">{{ total }} races across all seasons</p>
+</div>
+
 <!-- ── Latest Race Featured Card ─────────────────────────────────────────── -->
 {% if featured %}
 <div class="featured-card">
@@ -316,7 +321,7 @@
   <div class="featured-stats">
     <div class="featured-stat">
       <span class="featured-stat-val">{{ featured.entries }}</span>
-      <div class="featured-stat-label">Entries</div>
+      <div class="featured-stat-label">Starters</div>
     </div>
     <div class="featured-stat">
       <span class="featured-stat-val">{{ featured.total_laps|default:"—" }}</span>
@@ -354,7 +359,16 @@
   </div>
 </form>
 
-<!-- ── Table ──────────────────────────────────────────────────────────────── -->
+<!-- ── View toggle ──────────────────────────────────────────────────────────── -->
+<div style="display:flex;justify-content:flex-end;gap:0.3rem;margin-bottom:0.75rem;">
+  <button class="view-toggle-btn" data-view="table">&#9776; Table</button>
+  <button class="view-toggle-btn" data-view="cards">&#9632; Cards</button>
+</div>
+
+<div id="viewContainer" data-view="table">
+
+<!-- ── Table view ────────────────────────────────────────────────────────────── -->
+<div class="table-view">
 <div style="background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:0.5rem;">
   <table class="races-table">
     <thead>
@@ -414,6 +428,41 @@
     </tbody>
   </table>
 </div>
+</div><!-- /table-view -->
+
+<!-- ── Cards view ────────────────────────────────────────────────────────────── -->
+<div class="cards-view">
+  <div class="entity-grid">
+    {% for r in races %}
+    <a class="entity-card-link" href="{% url 'championship:race_detail' r.id %}">
+      <div class="entity-card">
+        <div class="entity-card-accent"></div>
+        <div class="entity-card-body">
+          <div class="entity-card-icon" style="background:var(--grey-d);color:var(--white);font-size:0.8rem;width:auto;padding:0 0.5rem;">{{ r.year }}</div>
+          <div class="entity-card-name">{{ r.label }}</div>
+          <div style="font-size:0.78rem;color:var(--grey);margin-bottom:0.4rem;">{{ r.circuit_label }}</div>
+          <div class="entity-card-stats">
+            <div class="entity-card-stat">
+              <span class="entity-card-stat-val">Rnd {{ r.round }}</span>
+              <div class="entity-card-stat-lbl">Round</div>
+            </div>
+            {% if r.winner_id %}
+            <div class="entity-card-stat">
+              <span class="entity-card-stat-val" style="font-size:0.85rem;">{{ r.winner_label }}</span>
+              <div class="entity-card-stat-lbl">Winner</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </a>
+    {% empty %}
+    <p style="color:var(--grey);padding:2rem 0;">No races found.</p>
+    {% endfor %}
+  </div>
+</div><!-- /cards-view -->
+
+</div><!-- /viewContainer -->
 
 <!-- ── Pagination ─────────────────────────────────────────────────────────── -->
 {% if total_pages > 1 %}
@@ -444,4 +493,5 @@
 </div>
 {% endif %}
 
+<script>initViewToggle('races');</script>
 {% endblock %}

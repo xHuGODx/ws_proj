@@ -360,7 +360,16 @@
   <span class="result-count">{{ total }} result{{ total|pluralize }}</span>
 </form>
 
-<!-- ── Table ────────────────────────────────────────────────── -->
+<!-- ── View toggle ──────────────────────────────────────────── -->
+<div style="display:flex;justify-content:flex-end;gap:0.3rem;margin-bottom:0.75rem;">
+  <button class="view-toggle-btn" data-view="table">&#9776; Table</button>
+  <button class="view-toggle-btn" data-view="cards">&#9632; Cards</button>
+</div>
+
+<div id="viewContainer" data-view="table">
+
+<!-- ── Table view ─────────────────────────────────────────── -->
+<div class="table-view">
 <div class="table-wrap">
   <table>
     <thead>
@@ -433,6 +442,43 @@
     </tbody>
   </table>
 </div>
+</div><!-- /table-view -->
+
+<!-- ── Cards view ────────────────────────────────────────────── -->
+<div class="cards-view">
+  <div class="entity-grid">
+    {% for c in constructors %}
+    <a class="entity-card-link" href="{% url 'championship:constructor_detail' c.id %}">
+      <div class="entity-card">
+        <div class="entity-card-accent"></div>
+        <div class="entity-card-body">
+          <div class="entity-card-icon">CTR</div>
+          <div class="entity-card-name">{{ c.label }}</div>
+          <div style="font-size:0.78rem;color:var(--grey);margin-bottom:0.4rem;">{{ c.nationality }}</div>
+          <div class="entity-card-stats">
+            <div class="entity-card-stat">
+              <span class="entity-card-stat-val">{{ c.races }}</span>
+              <div class="entity-card-stat-lbl">Races</div>
+            </div>
+            <div class="entity-card-stat">
+              <span class="entity-card-stat-val">{% if c.wins > 0 %}{{ c.wins }}{% else %}—{% endif %}</span>
+              <div class="entity-card-stat-lbl">Wins</div>
+            </div>
+            <div class="entity-card-stat">
+              <span class="entity-card-stat-val">{{ c.pilots }}</span>
+              <div class="entity-card-stat-lbl">Pilots</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </a>
+    {% empty %}
+    <p style="color:var(--grey);padding:2rem 0;">No constructors found.</p>
+    {% endfor %}
+  </div>
+</div><!-- /cards-view -->
+
+</div><!-- /viewContainer -->
 
 <!-- ── Pagination ───────────────────────────────────────────── -->
 {% if total_pages > 1 %}
@@ -460,4 +506,5 @@
 </nav>
 {% endif %}
 
+<script>initViewToggle('constructors');</script>
 {% endblock %}

@@ -101,10 +101,21 @@
     transform: translateY(-3px);
   }
 
-  .section-card-icon {
-    font-size: 1.5rem;
-    margin-bottom: 0.75rem;
-    display: block;
+  /* Monogram icon badge — replaces emoji */
+  .card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 6px;
+    background: var(--red);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    color: #fff;
+    margin-bottom: 0.85rem;
   }
 
   .section-card-title {
@@ -146,34 +157,31 @@
     background: var(--panel);
     border: 1px solid var(--line);
     border-radius: 8px;
-    padding: 1rem 1.5rem;
-    display: flex;
+    padding: 0.75rem 1.25rem;
+    display: inline-flex;
     align-items: center;
-    gap: 1rem;
-    font-size: 0.88rem;
+    gap: 0.6rem;
+    font-size: 0.82rem;
   }
 
   .status-dot {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     flex-shrink: 0;
   }
 
-  .status-dot.ok    { background: #10b981; box-shadow: 0 0 6px #10b981; }
-  .status-dot.error { background: var(--red); box-shadow: 0 0 6px var(--red); }
+  .status-dot.ok    { background: #10b981; box-shadow: 0 0 5px #10b981; }
+  .status-dot.error { background: var(--red); box-shadow: 0 0 5px var(--red); }
 
-  .status-label {
+  .status-text {
     font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
+    font-weight: 600;
     font-size: 0.78rem;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--grey);
   }
-
-  .status-value { color: var(--white); }
-  .status-sep { color: var(--grey-d); }
 </style>
 {% endblock %}
 
@@ -190,14 +198,23 @@
   <span class="hero-badge">&#9679; Live data from GraphDB</span>
 </section>
 
-<!-- Stats -->
+<!-- Stats — values link to their sections -->
 <div class="stat-grid">
-  {% for stat in stats %}
-  <div class="stat-card">
-    <div class="stat-value">{{ stat.value }}</div>
-    <div class="stat-label">{{ stat.label }}</div>
-  </div>
-  {% endfor %}
+  <a href="{% url 'championship:seasons' %}" style="text-decoration:none;color:inherit;">
+    <div class="stat-card"><div class="stat-value">75</div><div class="stat-label">Seasons</div></div>
+  </a>
+  <a href="{% url 'championship:circuits' %}" style="text-decoration:none;color:inherit;">
+    <div class="stat-card"><div class="stat-value">77</div><div class="stat-label">Circuits</div></div>
+  </a>
+  <a href="{% url 'championship:drivers' %}" style="text-decoration:none;color:inherit;">
+    <div class="stat-card"><div class="stat-value">861</div><div class="stat-label">Drivers</div></div>
+  </a>
+  <a href="{% url 'championship:constructors' %}" style="text-decoration:none;color:inherit;">
+    <div class="stat-card"><div class="stat-value">212</div><div class="stat-label">Constructors</div></div>
+  </a>
+  <a href="{% url 'championship:races' %}" style="text-decoration:none;color:inherit;">
+    <div class="stat-card"><div class="stat-value">1,125</div><div class="stat-label">Races</div></div>
+  </a>
 </div>
 
 <!-- Section cards -->
@@ -205,73 +222,67 @@
 
   <a href="{% url 'championship:drivers' %}" class="nav-card">
     <div class="section-card">
-      <span class="section-card-icon">&#127941;</span>
+      <span class="card-icon">DRV</span>
       <div class="section-card-title">Drivers</div>
-      <p class="section-card-desc">Career stats, race results, lap times and championship titles for every driver.</p>
+      <p class="section-card-desc">861 drivers — career wins, podiums, race results and lap records across every season.</p>
       <span class="section-card-arrow">Explore &rsaquo;</span>
     </div>
   </a>
 
   <a href="{% url 'championship:constructors' %}" class="nav-card">
     <div class="section-card">
-      <span class="section-card-icon">&#127959;</span>
+      <span class="card-icon">CTR</span>
       <div class="section-card-title">Constructors</div>
-      <p class="section-card-desc">Teams, their seasons, constructor standings and championship history.</p>
+      <p class="section-card-desc">212 teams — constructor standings, driver rosters and season-by-season performance.</p>
       <span class="section-card-arrow">Explore &rsaquo;</span>
     </div>
   </a>
 
   <a href="{% url 'championship:seasons' %}" class="nav-card">
     <div class="section-card">
-      <span class="section-card-icon">&#128197;</span>
+      <span class="card-icon">SSN</span>
       <div class="section-card-title">Seasons</div>
-      <p class="section-card-desc">Full season breakdowns with race calendars and final standings.</p>
+      <p class="section-card-desc">16 seasons (2009–2024) — race calendars, driver and constructor championship standings.</p>
       <span class="section-card-arrow">Explore &rsaquo;</span>
     </div>
   </a>
 
   <a href="{% url 'championship:races' %}" class="nav-card">
     <div class="section-card">
-      <span class="section-card-icon">&#127937;</span>
+      <span class="card-icon">RCE</span>
       <div class="section-card-title">Races</div>
-      <p class="section-card-desc">Race results, qualifying sessions, fastest laps and pit stop data.</p>
+      <p class="section-card-desc">1,125 races — full results, qualifying times, fastest laps and grid positions.</p>
       <span class="section-card-arrow">Explore &rsaquo;</span>
     </div>
   </a>
 
   <a href="{% url 'championship:circuits' %}" class="nav-card">
     <div class="section-card">
-      <span class="section-card-icon">&#127758;</span>
+      <span class="card-icon">TRK</span>
       <div class="section-card-title">Circuits</div>
-      <p class="section-card-desc">Every circuit with location, country, altitude and full race history.</p>
+      <p class="section-card-desc">77 circuits — race histories, lap records, locations and active status.</p>
       <span class="section-card-arrow">Explore &rsaquo;</span>
     </div>
   </a>
 
   <a href="{% url 'championship:sparql' %}" class="nav-card">
     <div class="section-card">
-      <span class="section-card-icon">&#128269;</span>
+      <span class="card-icon" style="background:var(--grey-d);color:var(--white);">SQL</span>
       <div class="section-card-title">SPARQL</div>
-      <p class="section-card-desc">Query the knowledge graph directly with custom SPARQL SELECT and UPDATE queries.</p>
+      <p class="section-card-desc">Run custom SPARQL queries directly against the knowledge graph.</p>
       <span class="section-card-arrow">Explore &rsaquo;</span>
     </div>
   </a>
 
 </div>
 
-<!-- GraphDB status -->
+<!-- GraphDB status — minimal: dot + status text only -->
 <div class="status-bar">
   <div class="status-dot {% if graphdb.ok %}ok{% else %}error{% endif %}"></div>
-  <span class="status-label">GraphDB</span>
-  {% if graphdb.ok %}
-    <span class="status-value">Connected</span>
-    <span class="status-sep">&mdash;</span>
-    <span class="status-value"><strong>{{ graphdb.triple_count }}</strong> triples</span>
-    <span class="status-sep">&mdash;</span>
-    <span style="color:var(--grey);font-size:0.82rem;"><code>{{ graphdb.endpoint }}</code></span>
-  {% else %}
-    <span style="color:var(--red);">Unavailable &mdash; {{ graphdb.error }}</span>
-  {% endif %}
+  <span class="status-text">
+    GraphDB &nbsp;&middot;&nbsp;
+    {% if graphdb.ok %}Connected{% else %}Unavailable{% endif %}
+  </span>
 </div>
 
 {% endblock %}

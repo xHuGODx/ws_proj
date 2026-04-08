@@ -23,14 +23,26 @@
     }
 
     [data-theme="light"] {
-      --black:    #FFFFFF;
-      --dark:     #F3F4F6;
+      --black:    #EFEFEF;
+      --dark:     #E2E2E2;
       --panel:    #FFFFFF;
-      --panel-l:  #F9FAFB;
+      --panel-l:  #F5F5F5;
       --white:    #111111;
-      --grey:     #555555;
-      --grey-d:   #CCCCCC;
-      --line:     #E5E7EB;
+      --grey:     #6B7280;
+      --grey-d:   #D1D5DB;
+      --line:     #DEDEDE;
+    }
+
+    /* Extra depth for cards/panels in light mode */
+    [data-theme="light"] .panel,
+    [data-theme="light"] .section-card,
+    [data-theme="light"] .stat-card,
+    [data-theme="light"] .season-card {
+      box-shadow: 0 1px 4px rgba(0,0,0,0.09);
+    }
+
+    [data-theme="light"] nav {
+      background: var(--dark);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -50,7 +62,7 @@
     nav {
       background: var(--black);
       border-bottom: 3px solid var(--red);
-      height: 4rem;
+      min-height: 4rem;
       display: flex;
       align-items: center;
       padding: 0 2rem;
@@ -58,6 +70,7 @@
       position: sticky;
       top: 0;
       z-index: 100;
+      flex-wrap: wrap;
     }
 
     .nav-brand {
@@ -120,6 +133,258 @@
       flex-shrink: 0;
     }
     .theme-toggle:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── Hamburger (hidden on desktop) ─────────────────────── */
+    .nav-burger {
+      display: none;
+      background: transparent;
+      border: 1px solid var(--grey-d);
+      color: var(--grey);
+      width: 2.2rem;
+      height: 2.2rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .nav-burger:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── Left-drawer overlay (mobile) ───────────────────────── */
+    .nav-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 200;
+    }
+    .nav-overlay.open { display: block; }
+
+    .nav-drawer {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: 260px;
+      background: var(--dark);
+      border-right: 3px solid var(--red);
+      z-index: 201;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      transform: translateX(-100%);
+      transition: transform .25s ease;
+    }
+    .nav-drawer.open { transform: translateX(0); }
+
+    .nav-drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav-drawer-brand {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: 1.6rem;
+      color: var(--white);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+    .nav-drawer-brand span { color: var(--red); }
+
+    .nav-drawer-close {
+      background: transparent;
+      border: 1px solid var(--grey-d);
+      color: var(--grey);
+      width: 2rem;
+      height: 2rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .nav-drawer-close:hover { border-color: var(--red); color: var(--red); }
+
+    .nav-drawer-links {
+      display: flex;
+      flex-direction: column;
+      padding: 0.75rem 0;
+      flex: 1;
+    }
+
+    .nav-drawer-links a {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--grey);
+      text-decoration: none;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.85rem 1.25rem;
+      border-left: 3px solid transparent;
+      transition: color .15s, background .15s, border-color .15s;
+    }
+    .nav-drawer-links a:hover {
+      color: var(--white);
+      background: var(--panel);
+      border-left-color: var(--grey-d);
+    }
+    .nav-drawer-links a.active {
+      color: var(--white);
+      background: var(--panel);
+      border-left-color: var(--red);
+    }
+
+    .nav-drawer-links .drawer-icon {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 5px;
+      background: var(--red);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: 0.72rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .nav-drawer-links a.active .drawer-icon,
+    .nav-drawer-links a:hover .drawer-icon {
+      background: var(--red);
+    }
+    .nav-drawer-links .drawer-icon.grey { background: var(--grey-d); }
+
+    /* ── Mobile layout ──────────────────────────────────────── */
+    @media (max-width: 740px) {
+      nav { padding: 0 1rem; min-height: 3.5rem; flex-wrap: nowrap; }
+      .nav-brand { margin-right: auto; padding: 0.75rem 0; }
+      .nav-burger { display: flex; }
+      .theme-toggle { margin-left: 0.5rem; }
+      .nav-links { display: none !important; } /* hidden — drawer used instead */
+    }
+
+    /* ── View toggle (shared across list pages) ─────────────── */
+    .view-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: var(--dark);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 0.4rem 0.7rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--grey);
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+      white-space: nowrap;
+    }
+    .view-toggle-btn:hover { border-color: var(--red); color: var(--white); }
+    .view-toggle-btn.active { border-color: var(--red); color: var(--white); background: var(--red); }
+
+    /* ── Entity card grid (shared) ──────────────────────────── */
+    .entity-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .entity-card-link { text-decoration: none; color: inherit; display: block; }
+
+    .entity-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      height: 100%;
+      transition: border-color .18s, transform .18s;
+    }
+    .entity-card-link:hover .entity-card {
+      border-color: var(--red);
+      transform: translateY(-2px);
+    }
+
+    .entity-card-accent { height: 3px; background: var(--line); }
+    .entity-card-link:hover .entity-card-accent { background: var(--red); }
+
+    .entity-card-body { padding: 1rem 1rem 0.5rem; }
+
+    .entity-card-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 5px;
+      background: var(--red);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: 0.72rem;
+      color: #fff;
+      margin-bottom: 0.6rem;
+    }
+
+    .entity-card-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: var(--white);
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+    }
+
+    .entity-card-stats {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      padding: 0.6rem 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .entity-card-stat { text-align: center; }
+    .entity-card-stat-val {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: var(--white);
+      display: block;
+      line-height: 1;
+    }
+    .entity-card-stat-lbl {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--grey);
+      margin-top: 0.1rem;
+    }
+
+    .entity-card-footer {
+      padding: 0.5rem 1rem;
+      border-top: 1px solid var(--line);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.75rem;
+      color: var(--grey);
+      background: var(--dark);
+    }
+
+    /* data-view switching */
+    [data-view="table"] .cards-view { display: none; }
+    [data-view="cards"] .table-view { display: none; }
 
     /* ── Main ───────────────────────────────────────────────── */
     main {
@@ -345,31 +610,89 @@
 </head>
 <body>
 
+<!-- Overlay for mobile drawer -->
+<div class="nav-overlay" id="navOverlay"></div>
+
+<!-- Left-side mobile drawer -->
+<div class="nav-drawer" id="navDrawer">
+  <div class="nav-drawer-header">
+    <a class="nav-drawer-brand" href="{% url 'championship:home' %}">F<span>1</span></a>
+    <button class="nav-drawer-close" id="navClose" aria-label="Close menu">&#10005;</button>
+  </div>
+  <div class="nav-drawer-links">
+    <a href="{% url 'championship:drivers' %}" {% if request.resolver_match.url_name == 'drivers' or request.resolver_match.url_name == 'driver_detail' %}class="active"{% endif %}>
+      <span class="drawer-icon">DRV</span>Drivers
+    </a>
+    <a href="{% url 'championship:constructors' %}" {% if request.resolver_match.url_name == 'constructors' or request.resolver_match.url_name == 'constructor_detail' %}class="active"{% endif %}>
+      <span class="drawer-icon">CTR</span>Constructors
+    </a>
+    <a href="{% url 'championship:seasons' %}" {% if request.resolver_match.url_name == 'seasons' or request.resolver_match.url_name == 'season_detail' %}class="active"{% endif %}>
+      <span class="drawer-icon">SSN</span>Seasons
+    </a>
+    <a href="{% url 'championship:races' %}" {% if request.resolver_match.url_name == 'races' or request.resolver_match.url_name == 'race_detail' %}class="active"{% endif %}>
+      <span class="drawer-icon">RCE</span>Races
+    </a>
+    <a href="{% url 'championship:circuits' %}" {% if request.resolver_match.url_name == 'circuits' or request.resolver_match.url_name == 'circuit_detail' %}class="active"{% endif %}>
+      <span class="drawer-icon">TRK</span>Circuits
+    </a>
+  </div>
+</div>
+
 <nav>
   <a class="nav-brand" href="{% url 'championship:home' %}">
     <span class="nav-brand-f1">F<span>1</span></span>
   </a>
-  <div class="nav-links">
-    <a href="{% url 'championship:drivers' %}"      {% if request.resolver_match.url_name == 'drivers'      %}class="active"{% endif %}>Drivers</a>
-    <a href="{% url 'championship:constructors' %}" {% if request.resolver_match.url_name == 'constructors' %}class="active"{% endif %}>Constructors</a>
-    <a href="{% url 'championship:seasons' %}"      {% if request.resolver_match.url_name == 'seasons'      %}class="active"{% endif %}>Seasons</a>
-    <a href="{% url 'championship:races' %}"        {% if request.resolver_match.url_name == 'races'        %}class="active"{% endif %}>Races</a>
-    <a href="{% url 'championship:circuits' %}"     {% if request.resolver_match.url_name == 'circuits'     %}class="active"{% endif %}>Circuits</a>
-    <a href="{% url 'championship:sparql' %}"       {% if request.resolver_match.url_name == 'sparql'       %}class="active"{% endif %}>SPARQL</a>
+  <div class="nav-links" id="navLinks">
+    <a href="{% url 'championship:drivers' %}"      {% if request.resolver_match.url_name == 'drivers'      or request.resolver_match.url_name == 'driver_detail'      %}class="active"{% endif %}>Drivers</a>
+    <a href="{% url 'championship:constructors' %}" {% if request.resolver_match.url_name == 'constructors' or request.resolver_match.url_name == 'constructor_detail' %}class="active"{% endif %}>Constructors</a>
+    <a href="{% url 'championship:seasons' %}"      {% if request.resolver_match.url_name == 'seasons'      or request.resolver_match.url_name == 'season_detail'      %}class="active"{% endif %}>Seasons</a>
+    <a href="{% url 'championship:races' %}"        {% if request.resolver_match.url_name == 'races'        or request.resolver_match.url_name == 'race_detail'        %}class="active"{% endif %}>Races</a>
+    <a href="{% url 'championship:circuits' %}"     {% if request.resolver_match.url_name == 'circuits'     or request.resolver_match.url_name == 'circuit_detail'     %}class="active"{% endif %}>Circuits</a>
   </div>
+  <button class="nav-burger" id="navBurger" aria-label="Menu">&#9776;</button>
   <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle light/dark mode">☀</button>
 </nav>
 <script>
-  const btn = document.getElementById('themeToggle');
+  // Theme
+  const themeBtn = document.getElementById('themeToggle');
   function applyTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
     localStorage.setItem('theme', t);
-    btn.textContent = t === 'dark' ? '☀' : '☾';
+    themeBtn.textContent = t === 'dark' ? '☀' : '☾';
   }
   applyTheme(localStorage.getItem('theme') || 'dark');
-  btn.addEventListener('click', () => {
+  themeBtn.addEventListener('click', () => {
     applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
   });
+
+  // Mobile drawer
+  const drawer  = document.getElementById('navDrawer');
+  const overlay = document.getElementById('navOverlay');
+  function openDrawer()  { drawer.classList.add('open');  overlay.classList.add('open');  }
+  function closeDrawer() { drawer.classList.remove('open'); overlay.classList.remove('open'); }
+  document.getElementById('navBurger').addEventListener('click', openDrawer);
+  document.getElementById('navClose').addEventListener('click', closeDrawer);
+  overlay.addEventListener('click', closeDrawer);
+
+  // View toggle helper (used by list pages)
+  function initViewToggle(key, defaultView) {
+    const saved = localStorage.getItem('viewMode_' + key) || defaultView || 'table';
+    const container = document.getElementById('viewContainer');
+    if (!container) return;
+    container.setAttribute('data-view', saved);
+    document.querySelectorAll('.view-toggle-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.view === saved);
+    });
+    document.querySelectorAll('.view-toggle-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        const v = b.dataset.view;
+        container.setAttribute('data-view', v);
+        localStorage.setItem('viewMode_' + key, v);
+        document.querySelectorAll('.view-toggle-btn').forEach(x =>
+          x.classList.toggle('active', x.dataset.view === v));
+      });
+    });
+  }
 </script>
 
 <main>

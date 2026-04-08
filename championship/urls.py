@@ -11,6 +11,7 @@ urlpatterns = [
     path("constructors/", views.constructors, name="constructors"),
     path("constructors/<str:constructor_id>/", views.constructor_detail, name="constructor_detail"),
     path("seasons/", views.seasons, name="seasons"),
+    path("seasons/<str:year>/", views.season_detail, name="season_detail"),
     path("races/", views.races, name="races"),
     path("races/<str:race_id>/", views.race_detail, name="race_detail"),
     path("circuits/", views.circuits, name="circuits"),

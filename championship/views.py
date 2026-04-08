@@ -633,7 +633,177 @@ def circuit_detail(request, circuit_id: str):
 
 
 def seasons(request):
-    return render(request, _COMING_SOON, {"page": "Seasons"})
+    db = GraphDBClient()
+
+    # ── Q1: Aggregate stats per season ────────────────────────────────────────
+    # Anchor on f1:resultId; join to race for year.
+    stat_rows = db.query("""
+        SELECT ?year
+               (COUNT(DISTINCT ?race)        AS ?races)
+               (COUNT(DISTINCT ?driver)      AS ?drivers)
+               (COUNT(DISTINCT ?constructor) AS ?constructors)
+        WHERE {
+          ?res f1:resultId ?anyId ;
+               f1:race ?race ;
+               f1:driver ?driver ;
+               f1:constructor ?constructor .
+          ?race f1:year ?year .
+        } GROUP BY ?year
+        ORDER BY DESC(?year)
+    """)
+
+    # ── Q2: Top race-winner per season ────────────────────────────────────────
+    winner_rows = db.query("""
+        SELECT ?year ?driverLabel ?driverId (COUNT(*) AS ?wins) WHERE {
+          ?res f1:resultId ?anyId ;
+               f1:race ?race ;
+               f1:positionOrder 1 ;
+               f1:driver ?driver .
+          ?race f1:year ?year .
+          ?driver rdfs:label ?driverLabel ;
+                  f1:driverId ?driverId .
+        } GROUP BY ?year ?driverLabel ?driverId
+        ORDER BY DESC(?year) DESC(?wins)
+    """)
+
+    top_winner: dict[str, dict] = {}
+    for r in winner_rows:
+        y = r.get("year", "")
+        if y not in top_winner:
+            top_winner[y] = r
+
+    all_seasons = []
+    for r in stat_rows:
+        y = r.get("year", "")
+        w = top_winner.get(y, {})
+        all_seasons.append({
+            "year":              y,
+            "races":             int(r.get("races", 0)),
+            "drivers":           int(r.get("drivers", 0)),
+            "constructors":      int(r.get("constructors", 0)),
+            "top_winner_label":  w.get("driverLabel", ""),
+            "top_winner_id":     w.get("driverId", ""),
+            "top_winner_wins":   int(w.get("wins", 0)) if w.get("wins") else 0,
+        })
+
+    return render(request, "championship/seasons.html", {
+        "seasons": all_seasons,
+    })
+
+
+def season_detail(request, year: str):
+    db = GraphDBClient()
+    # Validate year is a 4-digit number
+    if not year.isdigit() or len(year) != 4:
+        return render(request, _COMING_SOON, {"page": "Season not found"})
+
+    # ── Q1: Race calendar ─────────────────────────────────────────────────────
+    # GROUP BY deduplicates races that have >1 positionOrder=1 result (e.g.
+    # sprint-weekend races which may have both a sprint and race winner row).
+    race_rows = db.query(f"""
+        SELECT ?raceId ?raceName ?round ?date
+               ?circuitLabel ?circuitCountry
+               (SAMPLE(?winnerLabel) AS ?winnerLabel)
+               (SAMPLE(?winnerDriverId) AS ?winnerDriverId)
+               (SAMPLE(?winnerConstructor) AS ?winnerConstructor) WHERE {{
+          ?race f1:round ?round ;
+                f1:year ?yr ;
+                f1:raceId ?raceId ;
+                rdfs:label ?raceName .
+          FILTER(STR(?yr) = "{year}")
+          OPTIONAL {{ ?race f1:date ?date }}
+          OPTIONAL {{
+            ?race f1:circuit ?circuit .
+            ?circuit rdfs:label ?circuitLabel .
+            OPTIONAL {{ ?circuit f1:country ?circuitCountry }}
+          }}
+          OPTIONAL {{
+            ?res f1:resultId ?anyId ;
+                 f1:race ?race ;
+                 f1:positionOrder 1 ;
+                 f1:driver ?winner ;
+                 f1:constructor ?ctor .
+            ?winner rdfs:label ?winnerLabel ;
+                    f1:driverId ?winnerDriverId .
+            ?ctor   rdfs:label ?winnerConstructor .
+          }}
+        }}
+        GROUP BY ?raceId ?raceName ?round ?date ?circuitLabel ?circuitCountry
+        ORDER BY ?round
+    """)
+
+    if not race_rows:
+        return render(request, _COMING_SOON, {"page": f"Season {year} not found"})
+
+    total_races = len(race_rows)
+
+    # ── Q2: Driver standings (all rounds; keep last per driver in Python) ──────
+    ds_rows = db.query(f"""
+        SELECT ?driverLabel ?driverId ?points ?position ?wins ?round WHERE {{
+          ?ds f1:driverStandingsId ?anyId ;
+              f1:race ?race ;
+              f1:driver ?driver ;
+              f1:points ?points ;
+              f1:position ?position ;
+              f1:wins ?wins .
+          ?race f1:year ?yr ; f1:round ?round .
+          FILTER(STR(?yr) = "{year}")
+          ?driver rdfs:label ?driverLabel ;
+                  f1:driverId ?driverId .
+        }}
+        ORDER BY DESC(?round) ?position
+    """)
+
+    seen_drivers: set[str] = set()
+    driver_standings = []
+    for r in ds_rows:
+        did = r.get("driverId", "")
+        if did not in seen_drivers:
+            seen_drivers.add(did)
+            driver_standings.append(r)
+    driver_standings.sort(key=lambda x: int(x.get("position", 999)))
+
+    # ── Q3: Constructor standings (same pattern) ──────────────────────────────
+    cs_rows = db.query(f"""
+        SELECT ?constructorLabel ?constructorId ?points ?position ?wins ?round WHERE {{
+          ?cs f1:constructorStandingsId ?anyId ;
+              f1:race ?race ;
+              f1:constructor ?constructor ;
+              f1:points ?points ;
+              f1:position ?position ;
+              f1:wins ?wins .
+          ?race f1:year ?yr ; f1:round ?round .
+          FILTER(STR(?yr) = "{year}")
+          ?constructor rdfs:label ?constructorLabel ;
+                       f1:constructorId ?constructorId .
+        }}
+        ORDER BY DESC(?round) ?position
+    """)
+
+    seen_constructors: set[str] = set()
+    constructor_standings = []
+    for r in cs_rows:
+        cid = r.get("constructorId", "")
+        if cid not in seen_constructors:
+            seen_constructors.add(cid)
+            constructor_standings.append(r)
+    constructor_standings.sort(key=lambda x: int(x.get("position", 999)))
+
+    # Wikipedia URL for season entity
+    season_uri = f"<{RESOURCE_BASE}season/{year}>"
+    wiki_rows  = db.query(f"SELECT ?url WHERE {{ {season_uri} rdfs:seeAlso ?url . }} LIMIT 1")
+    wiki_url   = wiki_rows[0]["url"] if wiki_rows else ""
+
+    return render(request, "championship/season_detail.html", {
+        "year":                   year,
+        "wiki_url":               wiki_url,
+        "race_calendar":          race_rows,
+        "total_races":            total_races,
+        "driver_standings":       driver_standings,
+        "constructor_standings":  constructor_standings,
+        "unique_drivers":         len(driver_standings),
+        "unique_constructors":    len(constructor_standings),
+    })
 
 
 def races(request):
@@ -826,8 +996,8 @@ def race_detail(request, race_id: str):
           OPTIONAL {{
             {uri} f1:circuit ?circuit .
             ?circuit rdfs:label ?circuitLabel .
-            OPTIONAL {{ ?circuit f1:country    ?circuitCountry }}
-            OPTIONAL {{ ?circuit f1:circuitRef ?circuitId     }}
+            OPTIONAL {{ ?circuit f1:country   ?circuitCountry }}
+            OPTIONAL {{ ?circuit f1:circuitId ?circuitId      }}
           }}
         }}
     """)

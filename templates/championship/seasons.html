@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+{% block title %}Seasons{% endblock %}
+
+{% block extra_head %}
+<style>
+  .page-header {
+    margin-bottom: 2rem;
+  }
+
+  .page-header h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
+    line-height: 1;
+    color: var(--white);
+    margin-bottom: 0.35rem;
+  }
+
+  .page-header p {
+    color: var(--grey);
+    font-size: 0.95rem;
+  }
+
+  /* ── Season card grid ────────────────────────────────── */
+  .season-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+
+  .season-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+
+  .season-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.18s, transform 0.18s;
+    height: 100%;
+  }
+
+  .season-card-link:hover .season-card {
+    border-color: var(--red);
+    transform: translateY(-3px);
+  }
+
+  /* Red accent strip on top */
+  .season-card-top {
+    height: 4px;
+    background: var(--line);
+  }
+  .season-card-link:hover .season-card-top {
+    background: var(--red);
+  }
+
+  .season-card-body {
+    padding: 1.5rem;
+  }
+
+  .season-year {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 3.5rem;
+    line-height: 1;
+    color: var(--white);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.75rem;
+  }
+
+  .season-stats-row {
+    display: flex;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .season-stat {
+    text-align: center;
+  }
+
+  .season-stat-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: var(--white);
+    display: block;
+    line-height: 1;
+  }
+
+  .season-stat-lbl {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-top: 0.15rem;
+  }
+
+  .season-divider {
+    height: 1px;
+    background: var(--line);
+    margin-bottom: 1rem;
+  }
+
+  .season-winner-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey);
+    margin-bottom: 0.3rem;
+  }
+
+  .season-winner-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .season-winner-wins {
+    font-size: 0.78rem;
+    color: var(--grey);
+    font-weight: 600;
+  }
+
+  .season-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.5rem;
+    border-top: 1px solid var(--line);
+    background: var(--dark);
+  }
+
+  .season-explore {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--red);
+  }
+
+  @media (max-width: 600px) {
+    .season-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 400px) {
+    .season-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── Table view styles ───────────────────────────────────── */
+  .table-wrap {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  #seasonTable { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  #seasonTable thead tr { border-bottom: 2px solid var(--red); background: var(--dark); }
+
+  #seasonTable th {
+    padding: 0.7rem 1rem;
+    text-align: left;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey);
+    white-space: nowrap;
+  }
+
+  #seasonTable td {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+    color: var(--white);
+  }
+
+  #seasonTable tr:last-child td { border-bottom: none; }
+  #seasonTable tbody tr:hover td { background: var(--panel-l); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Header + controls ──────────────────────────────────────── -->
+<div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;margin-bottom:1.25rem;">
+  <div style="margin-right:auto;">
+    <h1 class="page-title" style="margin-bottom:0.15rem;">Seasons</h1>
+    <p style="color:var(--grey);font-size:0.9rem;" id="seasonCount">{{ seasons|length }} seasons · 2009–2024</p>
+  </div>
+
+  <input type="search" id="seasonSearch" placeholder="Search year or winner…"
+    style="padding:0.42rem 0.75rem;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--white);font-family:'Barlow',sans-serif;font-size:0.85rem;width:190px;outline:none;"
+    oninput="filterSeasons()" onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor='var(--line)'">
+
+  <select id="seasonSort" onchange="filterSeasons()"
+    style="padding:0.42rem 0.75rem;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--white);font-family:'Barlow',sans-serif;font-size:0.85rem;outline:none;">
+    <option value="year-desc">Year: Newest first</option>
+    <option value="year-asc">Year: Oldest first</option>
+    <option value="races-desc">Races: Most first</option>
+    <option value="races-asc">Races: Fewest first</option>
+  </select>
+
+  <div style="display:flex;gap:0.3rem;">
+    <button class="view-toggle-btn" data-view="cards">&#9632; Cards</button>
+    <button class="view-toggle-btn" data-view="table">&#9776; Table</button>
+  </div>
+</div>
+
+<div id="viewContainer" data-view="cards">
+
+<!-- ── Cards view ────────────────────────────────────────────── -->
+<div class="cards-view">
+  <div class="season-grid" id="seasonGrid">
+    {% for s in seasons %}
+    <a class="season-card-link" href="{% url 'championship:season_detail' s.year %}"
+       data-year="{{ s.year }}" data-races="{{ s.races }}"
+       data-winner="{{ s.top_winner_label|lower|default:'' }}">
+      <div class="season-card">
+        <div class="season-card-top"></div>
+        <div class="season-card-body">
+          <div class="season-year">{{ s.year }}</div>
+          <div class="season-stats-row">
+            <div class="season-stat">
+              <span class="season-stat-val">{{ s.races }}</span>
+              <div class="season-stat-lbl">Races</div>
+            </div>
+            <div class="season-stat">
+              <span class="season-stat-val">{{ s.drivers }}</span>
+              <div class="season-stat-lbl">Drivers</div>
+            </div>
+            <div class="season-stat">
+              <span class="season-stat-val">{{ s.constructors }}</span>
+              <div class="season-stat-lbl">Teams</div>
+            </div>
+          </div>
+          {% if s.top_winner_label %}
+          <div class="season-divider"></div>
+          <div class="season-winner-label">Most race wins</div>
+          <div class="season-winner-name">
+            &#129351;
+            {{ s.top_winner_label }}
+            <span class="season-winner-wins">({{ s.top_winner_wins }})</span>
+          </div>
+          {% endif %}
+        </div>
+        <div class="season-card-footer">
+          <span class="season-explore">View season &rsaquo;</span>
+        </div>
+      </div>
+    </a>
+    {% empty %}
+    <p style="color:var(--grey);">No seasons found.</p>
+    {% endfor %}
+  </div>
+  <p id="noCardsMsg" style="display:none;color:var(--grey);padding:2rem 0;">No seasons match your search.</p>
+</div><!-- /cards-view -->
+
+<!-- ── Table view ─────────────────────────────────────────────── -->
+<div class="table-view">
+  <div class="table-wrap">
+    <table id="seasonTable">
+      <thead>
+        <tr>
+          <th>Year</th>
+          <th>Races</th>
+          <th>Drivers</th>
+          <th>Teams</th>
+          <th>Most Race Wins</th>
+        </tr>
+      </thead>
+      <tbody id="seasonTableBody">
+        {% for s in seasons %}
+        <tr onclick="location.href='{% url 'championship:season_detail' s.year %}'" style="cursor:pointer;"
+            data-year="{{ s.year }}" data-races="{{ s.races }}"
+            data-winner="{{ s.top_winner_label|lower|default:'' }}">
+          <td>
+            <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.2rem;color:var(--white);">{{ s.year }}</span>
+          </td>
+          <td style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--red);">{{ s.races }}</td>
+          <td style="color:var(--grey);">{{ s.drivers }}</td>
+          <td style="color:var(--grey);">{{ s.constructors }}</td>
+          <td>
+            {% if s.top_winner_label %}
+            {% if s.top_winner_id %}
+            <a href="{% url 'championship:driver_detail' s.top_winner_id %}"
+               style="color:var(--white);text-decoration:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;"
+               onclick="event.stopPropagation()">
+              {{ s.top_winner_label }}
+            </a>
+            <span style="color:var(--grey);font-size:0.82rem;margin-left:0.3rem;">({{ s.top_winner_wins }} wins)</span>
+            {% else %}
+            <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;">{{ s.top_winner_label }}</span>
+            <span style="color:var(--grey);font-size:0.82rem;margin-left:0.3rem;">({{ s.top_winner_wins }} wins)</span>
+            {% endif %}
+            {% else %}
+            <span style="color:var(--grey);">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" style="text-align:center;color:var(--grey);padding:2rem;">No seasons found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p id="noTableMsg" style="display:none;color:var(--grey);padding:2rem 0;">No seasons match your search.</p>
+</div><!-- /table-view -->
+
+</div><!-- /viewContainer -->
+
+<script>
+initViewToggle('seasons', 'cards');
+
+function filterSeasons() {
+  const q    = document.getElementById('seasonSearch').value.trim().toLowerCase();
+  const sort = document.getElementById('seasonSort').value;
+
+  // Collect all items from cards (as source of truth)
+  const cards = Array.from(document.querySelectorAll('#seasonGrid .season-card-link'));
+  const rows  = Array.from(document.querySelectorAll('#seasonTableBody tr[data-year]'));
+
+  // Filter
+  function matches(el) {
+    if (!q) return true;
+    return el.dataset.year.includes(q) || el.dataset.winner.includes(q);
+  }
+
+  // Sort comparator
+  function cmp(a, b) {
+    if (sort === 'year-desc')   return parseInt(b.dataset.year)  - parseInt(a.dataset.year);
+    if (sort === 'year-asc')    return parseInt(a.dataset.year)  - parseInt(b.dataset.year);
+    if (sort === 'races-desc')  return parseInt(b.dataset.races) - parseInt(a.dataset.races);
+    if (sort === 'races-asc')   return parseInt(a.dataset.races) - parseInt(b.dataset.races);
+    return 0;
+  }
+
+  // Apply to cards
+  const grid = document.getElementById('seasonGrid');
+  const visibleCards = cards.filter(matches).sort(cmp);
+  cards.forEach(c => c.style.display = 'none');
+  visibleCards.forEach(c => { c.style.display = ''; grid.appendChild(c); });
+  document.getElementById('noCardsMsg').style.display = visibleCards.length ? 'none' : '';
+
+  // Apply to table rows
+  const tbody = document.getElementById('seasonTableBody');
+  const visibleRows = rows.filter(matches).sort(cmp);
+  rows.forEach(r => r.style.display = 'none');
+  visibleRows.forEach(r => { r.style.display = ''; tbody.appendChild(r); });
+  document.getElementById('noTableMsg').style.display = visibleRows.length ? 'none' : '';
+
+  // Update count
+  document.getElementById('seasonCount').textContent =
+    visibleCards.length + ' season' + (visibleCards.length !== 1 ? 's' : '') +
+    (q ? ' matching "' + q + '"' : ' · 2009–2024');
+}
+</script>
+
+{% endblock %}
