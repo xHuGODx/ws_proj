@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>System Error — F1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --red:   #E10600;
+      --black: #15151E;
+      --dark:  #1F1F27;
+      --panel: #242430;
+      --white: #FFFFFF;
+      --grey:  #909090;
+      --line:  #333340;
+    }
+    [data-theme="light"] {
+      --black: #EFEFEF;
+      --dark:  #E2E2E2;
+      --panel: #FFFFFF;
+      --white: #111111;
+      --grey:  #6B7280;
+      --line:  #DEDEDE;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Barlow', sans-serif;
+      background: var(--black);
+      color: var(--white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    nav {
+      background: var(--black);
+      border-bottom: 3px solid var(--red);
+      height: 4rem;
+      display: flex;
+      align-items: center;
+      padding: 0 2rem;
+    }
+    .nav-brand {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: 1.9rem;
+      color: var(--white);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+    .nav-brand span { color: var(--red); }
+    main {
+      flex: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2.5rem 2rem 5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 60vh;
+    }
+    .error-code {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: clamp(6rem, 18vw, 11rem);
+      line-height: 1;
+      color: var(--line);
+      letter-spacing: -0.04em;
+      user-select: none;
+    }
+    .divider {
+      width: 4px;
+      height: 3rem;
+      background: var(--red);
+      margin: 0 auto 1.5rem;
+    }
+    h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      letter-spacing: -0.01em;
+      color: var(--white);
+      margin-bottom: 0.6rem;
+    }
+    .lead {
+      font-size: 1rem;
+      color: var(--grey);
+      max-width: 32rem;
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+    }
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      padding: 0.45rem 1rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--grey);
+      margin-bottom: 2rem;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 5px var(--red);
+      flex-shrink: 0;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.5rem 1.25rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      text-decoration: none;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-primary { background: var(--red); color: #fff; }
+    .btn-primary:hover { background: #b30500; }
+    .btn-secondary { background: transparent; color: var(--red); border: 1px solid var(--red); }
+    .btn-secondary:hover { background: var(--red); color: #fff; }
+    .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; }
+    footer {
+      background: var(--dark);
+      border-top: 3px solid var(--red);
+      padding: 1rem 2rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--grey);
+    }
+  </style>
+  <script>
+    (function() {
+      const t = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/">F<span>1</span></a>
+</nav>
+
+<main>
+  <div class="error-code">500</div>
+  <div class="divider"></div>
+  <h1>System Unavailable</h1>
+  <p class="lead">
+    Something went wrong on our end. The knowledge graph or a backend service
+    may be temporarily unavailable. Please try again in a few moments.
+  </p>
+  <div class="status-chip">
+    <span class="status-dot"></span>
+    GraphDB &nbsp;&middot;&nbsp; Unavailable
+  </div>
+  <div class="actions">
+    <a href="/" class="btn btn-primary">&#8592; Back to Home</a>
+    <a href="javascript:location.reload()" class="btn btn-secondary">Retry</a>
+  </div>
+</main>
+
+<footer>
+  F<span style="color:var(--red)">1</span> Data Explorer &nbsp;&mdash;&nbsp; Service temporarily unavailable
+</footer>
+
+</body>
+</html>

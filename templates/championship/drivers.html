@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Drivers{% endblock %}
 
 {% block extra_head %}
@@ -108,12 +109,52 @@
   .p2 .podium-step { height: 80px;  background: linear-gradient(to bottom, #a8a8a8, #686868); }
   .p3 .podium-step { height: 58px;  background: linear-gradient(to bottom, #a06828, #704818); }
 
+  /* ── Podium photo ───────────────────────────────────────── */
+  .podium-photo {
+    width: 100%;
+    height: 140px;
+    background: var(--dark);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .podium-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 10%;
+    position: absolute;
+    inset: 0;
+  }
+
+  .podium-photo .photo-fallback { font-size: 3rem; line-height: 1; }
+
+  .podium-medal-badge {
+    position: absolute;
+    bottom: 0.4rem;
+    right: 0.4rem;
+    font-size: 1.3rem;
+    line-height: 1;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,.6));
+  }
+
+  .podium-card-text {
+    padding: 0.75rem 0.9rem 0.9rem;
+    text-align: center;
+  }
+
+  /* Without photo, fall back to original padding */
+  .podium-info-card:not(:has(.podium-photo)) { padding: 1.25rem 1rem 1rem; }
+
   @media (max-width: 600px) {
     .podium-display { gap: 0.4rem; }
     .podium-win-count { font-size: 2rem; }
     .podium-driver-name { font-size: 0.88rem; }
-    .podium-info-card { padding: 0.75rem 0.5rem 0.75rem; }
-    .podium-medal-icon { font-size: 1.6rem; }
+    .podium-photo { height: 100px; }
     .p1 .podium-step { height: 80px; }
     .p2 .podium-step { height: 58px; }
     .p3 .podium-step { height: 42px; }
@@ -296,11 +337,16 @@
     <!-- 2nd place -->
     <a class="podium-slot p2" href="{% url 'championship:driver_detail' podium.1.id %}">
       <div class="podium-info-card">
-        <span class="podium-medal-icon">&#129352;</span>
-        <div class="podium-driver-name">{{ podium.1.label }}</div>
-        <div class="podium-driver-nat">{{ podium.1.nationality }}</div>
-        <div class="podium-win-count">{{ podium.1.wins }}</div>
-        <div class="podium-win-label">Victories</div>
+        <div class="podium-photo">
+          {% if podium.1.img %}<img src="{% static podium.1.img %}" alt="{{ podium.1.label }}">{% else %}<span class="photo-fallback">&#129352;</span>{% endif %}
+          <span class="podium-medal-badge">&#129352;</span>
+        </div>
+        <div class="podium-card-text">
+          <div class="podium-driver-name">{{ podium.1.label }}</div>
+          <div class="podium-driver-nat">{{ podium.1.nationality }}</div>
+          <div class="podium-win-count">{{ podium.1.wins }}</div>
+          <div class="podium-win-label">Victories</div>
+        </div>
       </div>
       <div class="podium-step">2</div>
     </a>
@@ -308,11 +354,16 @@
     <!-- 1st place -->
     <a class="podium-slot p1" href="{% url 'championship:driver_detail' podium.0.id %}">
       <div class="podium-info-card">
-        <span class="podium-medal-icon">&#129351;</span>
-        <div class="podium-driver-name">{{ podium.0.label }}</div>
-        <div class="podium-driver-nat">{{ podium.0.nationality }}</div>
-        <div class="podium-win-count">{{ podium.0.wins }}</div>
-        <div class="podium-win-label">Victories</div>
+        <div class="podium-photo">
+          {% if podium.0.img %}<img src="{% static podium.0.img %}" alt="{{ podium.0.label }}">{% else %}<span class="photo-fallback">&#129351;</span>{% endif %}
+          <span class="podium-medal-badge">&#129351;</span>
+        </div>
+        <div class="podium-card-text">
+          <div class="podium-driver-name">{{ podium.0.label }}</div>
+          <div class="podium-driver-nat">{{ podium.0.nationality }}</div>
+          <div class="podium-win-count">{{ podium.0.wins }}</div>
+          <div class="podium-win-label">Victories</div>
+        </div>
       </div>
       <div class="podium-step">1</div>
     </a>
@@ -320,11 +371,16 @@
     <!-- 3rd place -->
     <a class="podium-slot p3" href="{% url 'championship:driver_detail' podium.2.id %}">
       <div class="podium-info-card">
-        <span class="podium-medal-icon">&#129353;</span>
-        <div class="podium-driver-name">{{ podium.2.label }}</div>
-        <div class="podium-driver-nat">{{ podium.2.nationality }}</div>
-        <div class="podium-win-count">{{ podium.2.wins }}</div>
-        <div class="podium-win-label">Victories</div>
+        <div class="podium-photo">
+          {% if podium.2.img %}<img src="{% static podium.2.img %}" alt="{{ podium.2.label }}">{% else %}<span class="photo-fallback">&#129353;</span>{% endif %}
+          <span class="podium-medal-badge">&#129353;</span>
+        </div>
+        <div class="podium-card-text">
+          <div class="podium-driver-name">{{ podium.2.label }}</div>
+          <div class="podium-driver-nat">{{ podium.2.nationality }}</div>
+          <div class="podium-win-count">{{ podium.2.wins }}</div>
+          <div class="podium-win-label">Victories</div>
+        </div>
       </div>
       <div class="podium-step">3</div>
     </a>
@@ -394,6 +450,7 @@
             Born {% if sort == 'born' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
           </a>
         </th>
+        <th>Career</th>
         <th class="{% if sort == 'races' %}active-sort{% endif %}">
           <a href="?q={{ q }}&nationality={{ nationality }}{% if medal %}&medal={{ medal }}{% endif %}&sort=races&order={% if sort == 'races' and order == 'asc' %}desc{% else %}asc{% endif %}&page=1">
             Races {% if sort == 'races' %}{% if order == 'asc' %}↑{% else %}↓{% endif %}{% endif %}
@@ -422,6 +479,9 @@
         </td>
         <td style="color:var(--grey);">{{ d.nationality }}</td>
         <td style="color:var(--grey);">{{ d.born|default:"—" }}</td>
+        <td style="color:var(--grey);font-family:'Barlow Condensed',sans-serif;font-weight:600;white-space:nowrap;">
+          {% if d.first_year %}{{ d.first_year }}{% if d.last_year and d.last_year != d.first_year %}–{{ d.last_year }}{% endif %}{% else %}—{% endif %}
+        </td>
         <td>{{ d.races }}</td>
         <td>
           {% if d.podiums > 0 %}
@@ -440,7 +500,7 @@
         <td class="wins-cell">{% if d.wins > 0 %}{{ d.wins }}{% else %}<span style="color:var(--grey);">—</span>{% endif %}</td>
       </tr>
       {% empty %}
-      <tr><td colspan="7" style="text-align:center;color:var(--grey);padding:2rem;">No drivers found.</td></tr>
+      <tr><td colspan="8" style="text-align:center;color:var(--grey);padding:2rem;">No drivers found.</td></tr>
       {% endfor %}
     </tbody>
   </table>
@@ -455,16 +515,26 @@
       <div class="entity-card">
         <div class="entity-card-accent"></div>
         <div class="entity-card-body">
-          <div class="entity-card-icon">DRV</div>
+          <!-- Top row: nationality -->
+          <div style="display:flex;justify-content:flex-end;align-items:flex-start;margin-bottom:0.55rem;">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--grey);">
+              {{ d.nationality }}
+            </span>
+          </div>
           <div class="entity-card-name">{{ d.label }}</div>
-          <div style="font-size:0.78rem;color:var(--grey);margin-bottom:0.4rem;">{{ d.nationality }}</div>
+          <div style="font-size:0.74rem;color:var(--grey);margin-top:0.1rem;margin-bottom:0.2rem;">
+            {% if d.born %}b. {{ d.born }}{% endif %}
+            {% if d.first_year %}&nbsp;&middot;&nbsp;{{ d.first_year }}{% if d.last_year and d.last_year != d.first_year %}–{{ d.last_year }}{% endif %}{% endif %}
+          </div>
           <div class="entity-card-stats">
             <div class="entity-card-stat">
               <span class="entity-card-stat-val">{{ d.races }}</span>
               <div class="entity-card-stat-lbl">Races</div>
             </div>
             <div class="entity-card-stat">
-              <span class="entity-card-stat-val">{% if d.wins > 0 %}{{ d.wins }}{% else %}—{% endif %}</span>
+              <span class="entity-card-stat-val" style="{% if d.wins > 0 %}color:var(--red);{% endif %}">
+                {% if d.wins > 0 %}{{ d.wins }}{% else %}—{% endif %}
+              </span>
               <div class="entity-card-stat-lbl">Wins</div>
             </div>
             <div class="entity-card-stat">

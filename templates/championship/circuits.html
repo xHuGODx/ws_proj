@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Circuits{% endblock %}
 
 {% block extra_head %}
@@ -338,10 +339,11 @@
   <div class="podium-display">
 
     <!-- 2nd place -->
-    <div class="podium-slot p2">
+    <a class="podium-slot p2" href="{% url 'championship:circuit_detail' podium.1.circuit_id %}">
       <div class="podium-info-card">
         <div class="circuit-img-area">
-          <span class="img-fallback">&#127937;</span>
+          {% if podium.1.img %}<img src="{% static podium.1.img %}" alt="{{ podium.1.label }}">{% endif %}
+          <span class="img-fallback" {% if podium.1.img %}style="display:none"{% endif %}>&#127937;</span>
         </div>
         <div class="podium-card-body">
           <div class="podium-circuit-name">{{ podium.1.label }}</div>
@@ -351,13 +353,14 @@
         </div>
       </div>
       <div class="podium-step">2</div>
-    </div>
+    </a>
 
     <!-- 1st place -->
-    <div class="podium-slot p1">
+    <a class="podium-slot p1" href="{% url 'championship:circuit_detail' podium.0.circuit_id %}">
       <div class="podium-info-card">
         <div class="circuit-img-area">
-          <span class="img-fallback">&#127937;</span>
+          {% if podium.0.img %}<img src="{% static podium.0.img %}" alt="{{ podium.0.label }}">{% endif %}
+          <span class="img-fallback" {% if podium.0.img %}style="display:none"{% endif %}>&#127937;</span>
         </div>
         <div class="podium-card-body">
           <div class="podium-circuit-name">{{ podium.0.label }}</div>
@@ -367,13 +370,14 @@
         </div>
       </div>
       <div class="podium-step">1</div>
-    </div>
+    </a>
 
     <!-- 3rd place -->
-    <div class="podium-slot p3">
+    <a class="podium-slot p3" href="{% url 'championship:circuit_detail' podium.2.circuit_id %}">
       <div class="podium-info-card">
         <div class="circuit-img-area">
-          <span class="img-fallback">&#127937;</span>
+          {% if podium.2.img %}<img src="{% static podium.2.img %}" alt="{{ podium.2.label }}">{% endif %}
+          <span class="img-fallback" {% if podium.2.img %}style="display:none"{% endif %}>&#127937;</span>
         </div>
         <div class="podium-card-body">
           <div class="podium-circuit-name">{{ podium.2.label }}</div>
@@ -383,7 +387,7 @@
         </div>
       </div>
       <div class="podium-step">3</div>
-    </div>
+    </a>
 
   </div>
 </section>
@@ -501,26 +505,34 @@
       <div class="entity-card">
         <div class="entity-card-accent"></div>
         <div class="entity-card-body">
-          <div class="entity-card-icon">TRK</div>
-          <div class="entity-card-name">{{ c.label }}</div>
-          <div style="font-size:0.78rem;color:var(--grey);margin-bottom:0.4rem;">
-            {{ c.location }}{% if c.location and c.country %}, {% endif %}{{ c.country }}
+          <!-- Top row: status badge + country -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.55rem;">
+            <span style="display:inline-block;padding:0.15rem 0.5rem;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;{% if c.active %}background:#1a3a1a;color:#4caf50;border:1px solid #4caf50;{% else %}background:var(--dark);color:var(--grey);border:1px solid var(--line);{% endif %}">
+              {% if c.active %}Active{% else %}Retired{% endif %}
+            </span>
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;letter-spacing:0.08em;color:var(--grey);text-transform:uppercase;">
+              {{ c.country }}
+            </span>
           </div>
+          <div class="entity-card-name">{{ c.label }}</div>
+          {% if c.location %}
+          <div style="font-size:0.74rem;color:var(--grey);margin-top:0.1rem;margin-bottom:0.2rem;">{{ c.location }}</div>
+          {% endif %}
           <div class="entity-card-stats">
             <div class="entity-card-stat">
-              <span class="entity-card-stat-val">{{ c.races }}</span>
+              <span class="entity-card-stat-val" style="color:var(--red);">{{ c.races }}</span>
               <div class="entity-card-stat-lbl">Races</div>
             </div>
             <div class="entity-card-stat">
               <span class="entity-card-stat-val">{{ c.first_year|default:"—" }}</span>
               <div class="entity-card-stat-lbl">Since</div>
             </div>
+            {% if not c.active %}
             <div class="entity-card-stat">
-              <span class="entity-card-stat-val" style="font-size:0.85rem;{% if c.active %}color:#4caf50;{% endif %}">
-                {% if c.active %}Active{% else %}Retd{% endif %}
-              </span>
-              <div class="entity-card-stat-lbl">Status</div>
+              <span class="entity-card-stat-val">{{ c.last_year|default:"—" }}</span>
+              <div class="entity-card-stat-lbl">Last used</div>
             </div>
+            {% endif %}
           </div>
         </div>
       </div>

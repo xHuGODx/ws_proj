@@ -438,21 +438,23 @@
       <div class="entity-card">
         <div class="entity-card-accent"></div>
         <div class="entity-card-body">
-          <div class="entity-card-icon" style="background:var(--grey-d);color:var(--white);font-size:0.8rem;width:auto;padding:0 0.5rem;">{{ r.year }}</div>
-          <div class="entity-card-name">{{ r.label }}</div>
-          <div style="font-size:0.78rem;color:var(--grey);margin-bottom:0.4rem;">{{ r.circuit_label }}</div>
-          <div class="entity-card-stats">
-            <div class="entity-card-stat">
-              <span class="entity-card-stat-val">Rnd {{ r.round }}</span>
-              <div class="entity-card-stat-lbl">Round</div>
-            </div>
-            {% if r.winner_id %}
-            <div class="entity-card-stat">
-              <span class="entity-card-stat-val" style="font-size:0.85rem;">{{ r.winner_label }}</span>
-              <div class="entity-card-stat-lbl">Winner</div>
-            </div>
-            {% endif %}
+          <!-- Top row: year (hero) + round badge -->
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem;">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.7rem;color:var(--red);line-height:1;">
+              {{ r.year }}
+            </span>
+            <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--grey);background:var(--dark);border:1px solid var(--line);padding:0.22rem 0.55rem;border-radius:3px;margin-top:0.25rem;">
+              Rnd {{ r.round }}
+            </span>
           </div>
+          <div class="entity-card-name">{{ r.label }}</div>
+          <div style="font-size:0.74rem;color:var(--grey);margin-top:0.1rem;">{{ r.circuit_label }}</div>
+          {% if r.winner_id %}
+          <div style="margin-top:0.6rem;padding-top:0.55rem;border-top:1px solid var(--line);display:flex;align-items:center;gap:0.4rem;">
+            <span style="font-size:1rem;line-height:1;">&#129351;</span>
+            <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.92rem;color:var(--white);">{{ r.winner_label }}</span>
+          </div>
+          {% endif %}
         </div>
       </div>
     </a>

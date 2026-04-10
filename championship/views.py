@@ -25,20 +25,78 @@ def _driver_id_from_uri(uri: str) -> str:
     return uri.rstrip("/").split("/")[-1]
 
 
+# ── Static image mappings ─────────────────────────────────────────────────────
+
+_DRIVER_IMAGES: dict[str, str] = {
+    "lewis hamilton":     "drivers/hamilton.png",
+    "michael schumacher": "drivers/schumacher.png",
+    "max verstappen":     "drivers/verstappen.png",
+}
+
+_CONSTRUCTOR_IMAGES: dict[str, str] = {
+    "ferrari":    "constructors/ferrari.png",
+    "mclaren":    "constructors/mclaren.png",
+    "red bull":   "constructors/redbull.png",
+}
+
+_CIRCUIT_IMAGES: dict[str, str] = {
+    "monaco":      "circuits/monaco.png",
+    "monza":       "circuits/monza.png",
+    "silverstone": "circuits/silverstone.png",
+}
+
+
+def _entity_image(label: str, mapping: dict[str, str]) -> str:
+    ll = label.lower()
+    for key, img in mapping.items():
+        if key in ll:
+            return img
+    return ""
+
+
 # ── Home ──────────────────────────────────────────────────────────────────────
 
 def home(request):
-    graphdb = GraphDBClient()
+    db = GraphDBClient()
+
+    # Query aggregate counts directly from the RDF knowledge graph.
+    count_rows = db.query("""
+        SELECT
+          (COUNT(DISTINCT ?season)      AS ?seasons)
+          (COUNT(DISTINCT ?circuit)     AS ?circuits)
+          (COUNT(DISTINCT ?driver)      AS ?drivers)
+          (COUNT(DISTINCT ?constructor) AS ?constructors)
+          (COUNT(DISTINCT ?race)        AS ?races)
+        WHERE {
+          ?race     f1:round       ?round ;
+                    f1:year        ?season ;
+                    f1:circuit     ?circuit .
+          ?res      f1:resultId    ?anyId ;
+                    f1:race        ?race ;
+                    f1:driver      ?driver ;
+                    f1:constructor ?constructor .
+        }
+    """)
+    counts = count_rows[0] if count_rows else {}
+
+    def _fmt(val: str) -> str:
+        try:
+            n = int(val)
+            return f"{n:,}"
+        except Exception:
+            return val or "—"
+
     stats = [
-        {"value": "75",   "label": "Seasons"},
-        {"value": "77",   "label": "Circuits"},
-        {"value": "861",  "label": "Drivers"},
-        {"value": "212",  "label": "Constructors"},
-        {"value": "1125", "label": "Races"},
+        {"value": _fmt(counts.get("seasons",      "")), "label": "Seasons"},
+        {"value": _fmt(counts.get("circuits",     "")), "label": "Circuits"},
+        {"value": _fmt(counts.get("drivers",      "")), "label": "Drivers"},
+        {"value": _fmt(counts.get("constructors", "")), "label": "Constructors"},
+        {"value": _fmt(counts.get("races",        "")), "label": "Races"},
     ]
+
     return render(request, "championship/home.html", {
-        "graphdb": graphdb.healthcheck(),
-        "stats": stats,
+        "graphdb": db.healthcheck(),
+        "stats":   stats,
     })
 
 
@@ -58,14 +116,20 @@ def drivers(request):
         }
     """)
 
-    race_counts = {
-        r["driver"]: int(r["races"])
-        for r in db.query("""
-            SELECT ?driver (COUNT(*) AS ?races) WHERE {
-              ?r f1:resultId ?anyId ; f1:driver ?driver .
-            } GROUP BY ?driver
-        """)
-    }
+    race_stats: dict[str, dict] = {}
+    for r in db.query("""
+        SELECT ?driver (COUNT(*) AS ?races)
+               (MIN(STR(?yr)) AS ?firstYear) (MAX(STR(?yr)) AS ?lastYear)
+        WHERE {
+          ?r f1:resultId ?anyId ; f1:driver ?driver ; f1:race ?race .
+          ?race f1:year ?yr .
+        } GROUP BY ?driver
+    """):
+        race_stats[r["driver"]] = {
+            "races":      int(r.get("races", 0)),
+            "first_year": r.get("firstYear", ""),
+            "last_year":  r.get("lastYear",  ""),
+        }
 
     # Single query for positions 1/2/3 — builds wins, seconds, thirds, podiums
     podium_breakdown: dict[str, dict[int, int]] = {}
@@ -84,24 +148,29 @@ def drivers(request):
 
     all_drivers = []
     for r in rows:
-        dob  = r.get("dob", "")
-        uri  = r.get("uri", "")
-        pdat = podium_breakdown.get(uri, {1: 0, 2: 0, 3: 0})
+        dob   = r.get("dob", "")
+        uri   = r.get("uri", "")
+        label = r.get("label", "")
+        pdat  = podium_breakdown.get(uri, {1: 0, 2: 0, 3: 0})
+        rs    = race_stats.get(uri, {})
         wins    = pdat.get(1, 0)
         seconds = pdat.get(2, 0)
         thirds  = pdat.get(3, 0)
         all_drivers.append({
             "id":          r.get("driverId", ""),
             "uri":         uri,
-            "label":       r.get("label", ""),
+            "label":       label,
             "nationality": r.get("nationality", ""),
             "code":        r.get("code", ""),
             "born":        dob[:4] if dob else "",
-            "races":       race_counts.get(uri, 0),
+            "races":       rs.get("races", 0),
+            "first_year":  rs.get("first_year", ""),
+            "last_year":   rs.get("last_year",  ""),
             "wins":        wins,
             "seconds":     seconds,
             "thirds":      thirds,
             "podiums":     wins + seconds + thirds,
+            "img":         _entity_image(label, _DRIVER_IMAGES),
         })
 
     # Podium sidebar — always from full unfiltered set
@@ -319,16 +388,17 @@ def constructors(request):
 
     all_constructors = []
     for r in rows:
-        uri  = r.get("uri", "")
-        s    = stats.get(uri, {})
-        pdat = podium_breakdown.get(uri, {1: 0, 2: 0, 3: 0})
+        uri   = r.get("uri", "")
+        label = r.get("label", "")
+        s     = stats.get(uri, {})
+        pdat  = podium_breakdown.get(uri, {1: 0, 2: 0, 3: 0})
         wins    = pdat.get(1, 0)
         seconds = pdat.get(2, 0)
         thirds  = pdat.get(3, 0)
         all_constructors.append({
             "id":          r.get("constructorId", ""),
             "uri":         uri,
-            "label":       r.get("label", ""),
+            "label":       label,
             "nationality": r.get("nationality", ""),
             "races":       s.get("races", 0),
             "first_year":  s.get("first_year", ""),
@@ -337,6 +407,7 @@ def constructors(request):
             "seconds":     seconds,
             "thirds":      thirds,
             "podiums":     wins + seconds + thirds,
+            "img":         _entity_image(label, _CONSTRUCTOR_IMAGES),
         })
 
     # Sidebar podium — top 3 by wins
@@ -1008,19 +1079,28 @@ def race_detail(request, race_id: str):
     wiki_rows = db.query(f"SELECT ?url WHERE {{ {uri} rdfs:seeAlso ?url . }} LIMIT 1")
     wiki_url  = wiki_rows[0]["url"] if wiki_rows else ""
 
-    # Race results
+    # Race results (with finish status via statusId join).
+    # FILTER excludes sprint-result URIs which share f1:race and f1:resultId
+    # with regular results, causing duplicate rows for every driver.
     result_rows = db.query(f"""
-        SELECT ?positionOrder ?grid ?laps ?time ?points
+        SELECT ?positionOrder ?grid ?laps ?time ?points ?statusText
                ?driverLabel ?driverId ?constructorLabel WHERE {{
           ?res f1:resultId ?anyId ;
                f1:race {uri} ;
                f1:positionOrder ?positionOrder ;
                f1:driver ?driver ;
                f1:constructor ?constructor .
+          FILTER(!CONTAINS(STR(?res), "/sprint-result/"))
           OPTIONAL {{ ?res f1:grid   ?grid   }}
           OPTIONAL {{ ?res f1:laps   ?laps   }}
           OPTIONAL {{ ?res f1:time   ?time   }}
           OPTIONAL {{ ?res f1:points ?points }}
+          OPTIONAL {{
+            ?res f1:statusId ?statusId .
+            ?statusEnt f1:statusId ?statusId ;
+                       f1:status   ?statusText .
+            FILTER(!CONTAINS(STR(?statusEnt), "/result/"))
+          }}
           ?driver rdfs:label ?driverLabel ;
                   f1:driverId ?driverId .
           ?constructor rdfs:label ?constructorLabel .
@@ -1036,6 +1116,7 @@ def race_detail(request, race_id: str):
             "laps":              r.get("laps", ""),
             "time":              r.get("time", ""),
             "points":            r.get("points", ""),
+            "status":            r.get("statusText", ""),
             "driver_label":      r.get("driverLabel", ""),
             "driver_id":         r.get("driverId", ""),
             "constructor_label": r.get("constructorLabel", ""),
@@ -1085,18 +1166,68 @@ def race_detail(request, race_id: str):
         ORDER BY ?position
     """)
 
+    # Pit stops — anchor on f1:stop (only pit_stops.csv entities carry this property)
+    pitstop_rows = db.query(f"""
+        SELECT ?driverLabel ?driverId
+               (COUNT(*)                AS ?stops)
+               (SUM(?ms)               AS ?totalMs)
+               (MIN(?ms)               AS ?fastestMs)
+               (SAMPLE(?fastestLap)    AS ?fastestLap)
+        WHERE {{
+          ?ps f1:stop ?stop ;
+              f1:race {uri} ;
+              f1:driver ?driver ;
+              f1:milliseconds ?ms ;
+              f1:lap ?fastestLap .
+          ?driver rdfs:label ?driverLabel ;
+                  f1:driverId ?driverId .
+        }}
+        GROUP BY ?driverLabel ?driverId
+        ORDER BY ?driverLabel
+    """)
+
+    def _ms_to_str(ms_val) -> str:
+        """Convert milliseconds (int or str) to m:ss.mmm string."""
+        try:
+            ms = int(ms_val)
+            minutes, remainder = divmod(ms, 60000)
+            seconds = remainder / 1000
+            if minutes:
+                return f"{minutes}:{seconds:06.3f}"
+            return f"{seconds:.3f}s"
+        except Exception:
+            return str(ms_val) if ms_val else "—"
+
+    pitstops = []
+    for r in pitstop_rows:
+        pitstops.append({
+            "driver_label": r.get("driverLabel", ""),
+            "driver_id":    r.get("driverId", ""),
+            "stops":        int(r.get("stops", 0)),
+            "total_time":   _ms_to_str(r.get("totalMs", "")),
+            "fastest_time": _ms_to_str(r.get("fastestMs", "")),
+            "fastest_lap":  r.get("fastestLap", ""),
+        })
+
+    # Pit stop summary stats for the hero chips
+    total_pitstops  = sum(p["stops"] for p in pitstops)
+    fastest_pitstop = min(pitstops, key=lambda p: p["fastest_time"]) if pitstops else None
+
     return render(request, "championship/race_detail.html", {
-        "info":       info,
-        "race_id":    race_id,
-        "wiki_url":   wiki_url,
-        "results":    results,
-        "p1":         p1,
-        "p2":         p2,
-        "p3":         p3,
-        "qualifying": qual_rows,
-        "entries":    entries,
-        "total_laps": total_laps,
-        "fastest":    fastest,
+        "info":             info,
+        "race_id":          race_id,
+        "wiki_url":         wiki_url,
+        "results":          results,
+        "p1":               p1,
+        "p2":               p2,
+        "p3":               p3,
+        "qualifying":       qual_rows,
+        "entries":          entries,
+        "total_laps":       total_laps,
+        "fastest":          fastest,
+        "pitstops":         pitstops,
+        "total_pitstops":   total_pitstops,
+        "fastest_pitstop":  fastest_pitstop,
     })
 
 
@@ -1136,18 +1267,20 @@ def circuits(request):
 
     all_circuits = []
     for r in rows:
-        uri = r.get("uri", "")
-        s   = stats.get(uri, {})
+        uri   = r.get("uri", "")
+        label = r.get("label", "")
+        s     = stats.get(uri, {})
         all_circuits.append({
             "id":         r.get("circuitRef", "") or r.get("circuitId", ""),
             "circuit_id": r.get("circuitId", ""),
             "uri":        uri,
-            "label":      r.get("label", ""),
+            "label":      label,
             "location":   r.get("location", ""),
             "country":    r.get("country", ""),
             "races":      s.get("races", 0),
             "first_year": s.get("first_year", ""),
             "last_year":  s.get("last_year", ""),
+            "img":        _entity_image(label, _CIRCUIT_IMAGES),
         })
 
     # Determine active: last_year == max year in dataset
@@ -1219,3 +1352,13 @@ def circuits(request):
 
 def sparql(request):
     return render(request, _COMING_SOON, {"page": "SPARQL"})
+
+
+# ── Error handlers ────────────────────────────────────────────────────────────
+
+def error_404(request, _exception):
+    return render(request, "404.html", status=404)
+
+
+def error_500(request):
+    return render(request, "500.html", status=500)

@@ -229,6 +229,63 @@
   .results-table tr:last-child td { border-bottom: none; }
   .results-table tbody tr:hover td { background: rgba(255,255,255,.03); }
 
+  .status-finished { color: var(--grey); font-size: 0.83rem; }
+  .status-dnf { color: #f59e0b; font-size: 0.83rem; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; }
+  .status-ret { color: var(--red); font-size: 0.83rem; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; }
+
+  /* ── Pit stops table ─────────────────────────────────── */
+  .pitstops-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+  }
+
+  .ps-card {
+    background: var(--dark);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 0.9rem 1rem;
+  }
+
+  .ps-driver {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: var(--white);
+    text-decoration: none;
+    display: block;
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ps-driver:hover { color: var(--red); }
+
+  .ps-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--grey);
+    margin-top: 0.25rem;
+  }
+  .ps-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    color: var(--white);
+  }
+  .ps-stops-badge {
+    display: inline-block;
+    background: var(--red);
+    color: #fff;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 0.75rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: 3px;
+    margin-left: 0.3rem;
+  }
+
   .pos-badge {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 900;
@@ -267,8 +324,12 @@
     .podium { flex-direction: column; align-items: stretch; }
     .podium-slot { flex-direction: row; }
     .podium-step { width: 60px; height: auto !important; min-height: 50px; }
+    /* Hide Grid and Status columns on narrow screens */
     .results-table th:nth-child(4),
-    .results-table td:nth-child(4) { display: none; }
+    .results-table td:nth-child(4),
+    .results-table th:nth-child(7),
+    .results-table td:nth-child(7) { display: none; }
+    .pitstops-grid { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
 {% endblock %}
@@ -383,7 +444,8 @@
         <th>Constructor</th>
         <th>Grid</th>
         <th>Laps</th>
-        <th>Time / Status</th>
+        <th>Time</th>
+        <th>Status</th>
         <th>Pts</th>
       </tr>
     </thead>
@@ -404,6 +466,19 @@
         </td>
         <td style="color:var(--grey);">{{ r.laps|default:"—" }}</td>
         <td class="time-cell">{{ r.time|default:"—" }}</td>
+        <td>
+          {% if r.status == "Finished" %}
+            <span class="status-finished">Finished</span>
+          {% elif r.status %}
+            {% if "+" in r.status or "Lap" in r.status %}
+              <span class="status-dnf">{{ r.status }}</span>
+            {% else %}
+              <span class="status-ret">{{ r.status }}</span>
+            {% endif %}
+          {% else %}
+            <span style="color:var(--grey);">—</span>
+          {% endif %}
+        </td>
         <td class="pts-cell">
           {% if r.points and r.points != "0" and r.points != "0.0" %}
             {{ r.points }}
@@ -414,7 +489,7 @@
       </tr>
       {% empty %}
       <tr>
-        <td colspan="7" style="text-align:center;color:var(--grey);padding:2rem;">No results available.</td>
+        <td colspan="8" style="text-align:center;color:var(--grey);padding:2rem;">No results available.</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -422,6 +497,44 @@
 </div>
 
 <!-- ── Qualifying Results ─────────────────────────────────────────────────── -->
+<!-- ── Pit Stops ───────────────────────────────────────────────────────────── -->
+{% if pitstops %}
+<div class="section-card">
+  <div class="section-card-head">
+    &#9874; Pit Stops
+    {% if total_pitstops %}
+      <span style="color:var(--white);margin-left:0.5rem;">{{ total_pitstops }} total</span>
+    {% endif %}
+    {% if fastest_pitstop %}
+      <span style="margin-left:1rem;color:var(--grey);">Fastest: <strong style="color:var(--white);">{{ fastest_pitstop.fastest_time }}</strong> ({{ fastest_pitstop.driver_label }})</span>
+    {% endif %}
+  </div>
+  <div class="pitstops-grid">
+    {% for ps in pitstops %}
+    <div class="ps-card">
+      <a class="ps-driver" href="{% url 'championship:driver_detail' ps.driver_id %}">{{ ps.driver_label }}</a>
+      <div class="ps-row">
+        <span>Stops</span>
+        <span class="ps-val">{{ ps.stops }}<span class="ps-stops-badge">{{ ps.stops }}</span></span>
+      </div>
+      <div class="ps-row">
+        <span>Total time</span>
+        <span class="ps-val">{{ ps.total_time }}</span>
+      </div>
+      <div class="ps-row">
+        <span>Fastest stop</span>
+        <span class="ps-val">{{ ps.fastest_time }}</span>
+      </div>
+      <div class="ps-row">
+        <span>Fastest on lap</span>
+        <span class="ps-val">{{ ps.fastest_lap }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
 {% if qualifying %}
 <div class="section-card">
   <div class="section-card-head">&#9203; Qualifying</div>

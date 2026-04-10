@@ -65,18 +65,6 @@ TABLE_CONFIG: dict[str, dict[str, Any]] = {
             "statusId": ("status", "status"),
         },
     },
-    "sprint_results": {
-        "filename": "sprint_results.csv",
-        "kind": "sprint-result",
-        "class_name": "SprintResult",
-        "id_columns": ["resultId"],
-        "links": {
-            "raceId": ("race", "race"),
-            "driverId": ("driver", "driver"),
-            "constructorId": ("constructor", "constructor"),
-            "statusId": ("status", "status"),
-        },
-    },
     "qualifying": {
         "filename": "qualifying.csv",
         "kind": "qualifying-result",
@@ -155,7 +143,6 @@ TABLE_ORDER = [
     "status",
     "races",
     "results",
-    "sprint_results",
     "qualifying",
     "pit_stops",
     "lap_times",
@@ -203,7 +190,6 @@ DATE_COLUMNS = {
     "fp2_date",
     "fp3_date",
     "quali_date",
-    "sprint_date",
 }
 TIME_COLUMNS = {
     "duration",
@@ -215,7 +201,6 @@ TIME_COLUMNS = {
     "q2",
     "q3",
     "quali_time",
-    "sprint_time",
     "time",
 }
 URI_COLUMNS = {"url"}
