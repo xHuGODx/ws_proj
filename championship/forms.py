@@ -1,0 +1,58 @@
+from __future__ import annotations
+
+from django import forms
+
+
+class LoginForm(forms.Form):
+    username = forms.CharField(max_length=150)
+    password = forms.CharField(widget=forms.PasswordInput)
+
+
+class DriverForm(forms.Form):
+    forename    = forms.CharField(max_length=100, label="First name")
+    surname     = forms.CharField(max_length=100, label="Last name")
+    code        = forms.CharField(max_length=3,   label="Code (3 letters)", required=False)
+    number      = forms.IntegerField(required=False, label="Permanent number")
+    dob         = forms.DateField(
+        required=False, label="Date of birth",
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+    nationality = forms.CharField(max_length=60, required=False)
+    url         = forms.URLField(required=False,  label="Wikipedia URL")
+
+
+class ConstructorForm(forms.Form):
+    name        = forms.CharField(max_length=150)
+    nationality = forms.CharField(max_length=60, required=False)
+    url         = forms.URLField(required=False, label="Wikipedia URL")
+
+
+class CircuitForm(forms.Form):
+    name     = forms.CharField(max_length=150)
+    location = forms.CharField(max_length=100, required=False)
+    country  = forms.CharField(max_length=80,  required=False)
+    lat      = forms.FloatField(required=False, label="Latitude")
+    lng      = forms.FloatField(required=False, label="Longitude")
+    url      = forms.URLField(required=False,   label="Wikipedia URL")
+
+
+class RaceForm(forms.Form):
+    name       = forms.CharField(max_length=150)
+    year       = forms.IntegerField(min_value=1950, max_value=2100)
+    round      = forms.IntegerField(min_value=1,   label="Round number")
+    circuit_id = forms.ChoiceField(choices=[], label="Circuit")
+    date       = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+    url        = forms.URLField(required=False, label="Wikipedia URL")
+
+    def __init__(self, *args, circuit_choices=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if circuit_choices:
+            self.fields["circuit_id"].choices = circuit_choices
+
+
+class SeasonForm(forms.Form):
+    year = forms.IntegerField(min_value=1950, max_value=2100)
+    url  = forms.URLField(required=False, label="Wikipedia URL")

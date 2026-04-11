@@ -37,6 +37,7 @@ _CONSTRUCTOR_IMAGES: dict[str, str] = {
     "ferrari":    "constructors/ferrari.png",
     "mclaren":    "constructors/mclaren.png",
     "red bull":   "constructors/redbull.png",
+    "mercedes":   "constructors/mercedes.png",
 }
 
 _CIRCUIT_IMAGES: dict[str, str] = {

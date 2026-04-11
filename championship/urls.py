@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import admin_views, views
 
 app_name = "championship"
 
@@ -17,4 +17,34 @@ urlpatterns = [
     path("circuits/", views.circuits, name="circuits"),
     path("circuits/<str:circuit_id>/", views.circuit_detail, name="circuit_detail"),
     path("sparql/", views.sparql, name="sparql"),
+
+    # ── Admin ──────────────────────────────────────────────────────────────
+    path("admin-panel/login/",   admin_views.admin_login,   name="admin_login"),
+    path("admin-panel/logout/",  admin_views.admin_logout,  name="admin_logout"),
+    path("admin-panel/",         admin_views.admin_dashboard, name="admin_dashboard"),
+
+    path("admin-panel/drivers/",                       admin_views.admin_drivers,        name="admin_drivers"),
+    path("admin-panel/drivers/add/",                   admin_views.admin_driver_add,     name="admin_driver_add"),
+    path("admin-panel/drivers/<str:driver_id>/edit/",  admin_views.admin_driver_edit,    name="admin_driver_edit"),
+    path("admin-panel/drivers/<str:driver_id>/delete/",admin_views.admin_driver_delete,  name="admin_driver_delete"),
+
+    path("admin-panel/constructors/",                             admin_views.admin_constructors,        name="admin_constructors"),
+    path("admin-panel/constructors/add/",                         admin_views.admin_constructor_add,     name="admin_constructor_add"),
+    path("admin-panel/constructors/<str:constructor_id>/edit/",   admin_views.admin_constructor_edit,    name="admin_constructor_edit"),
+    path("admin-panel/constructors/<str:constructor_id>/delete/", admin_views.admin_constructor_delete,  name="admin_constructor_delete"),
+
+    path("admin-panel/circuits/",                          admin_views.admin_circuits,        name="admin_circuits"),
+    path("admin-panel/circuits/add/",                      admin_views.admin_circuit_add,     name="admin_circuit_add"),
+    path("admin-panel/circuits/<str:circuit_id>/edit/",    admin_views.admin_circuit_edit,    name="admin_circuit_edit"),
+    path("admin-panel/circuits/<str:circuit_id>/delete/",  admin_views.admin_circuit_delete,  name="admin_circuit_delete"),
+
+    path("admin-panel/races/",                       admin_views.admin_races,        name="admin_races"),
+    path("admin-panel/races/add/",                   admin_views.admin_race_add,     name="admin_race_add"),
+    path("admin-panel/races/<str:race_id>/edit/",    admin_views.admin_race_edit,    name="admin_race_edit"),
+    path("admin-panel/races/<str:race_id>/delete/",  admin_views.admin_race_delete,  name="admin_race_delete"),
+
+    path("admin-panel/seasons/",                   admin_views.admin_seasons,        name="admin_seasons"),
+    path("admin-panel/seasons/add/",               admin_views.admin_season_add,     name="admin_season_add"),
+    path("admin-panel/seasons/<str:year>/edit/",   admin_views.admin_season_edit,    name="admin_season_edit"),
+    path("admin-panel/seasons/<str:year>/delete/", admin_views.admin_season_delete,  name="admin_season_delete"),
 ]

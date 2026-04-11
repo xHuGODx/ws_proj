@@ -1,0 +1,52 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Seasons — Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <h1 class="admin-page-title">Seasons</h1>
+  <a href="{% url 'championship:admin_season_add' %}" class="btn btn-primary">&#43; Add Season</a>
+</div>
+
+<div class="admin-table-wrap">
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Year</th>
+        <th>Wikipedia</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in seasons %}
+      <tr>
+        <td style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.15rem;color:var(--red);">
+          {{ s.year }}
+        </td>
+        <td style="font-size:0.82rem;">
+          {% if s.url %}
+          <a href="{{ s.url }}" target="_blank" rel="noopener"
+             style="color:var(--grey);text-decoration:none;"
+             onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='var(--grey)'">
+            Wikipedia &#8599;
+          </a>
+          {% else %}
+          <span style="color:var(--line);">—</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="action-btns">
+            <a class="btn-edit" href="{% url 'championship:admin_season_edit' s.year %}">Edit</a>
+            <button class="btn-del"
+                    onclick="openConfirm('Season {{ s.year|escapejs }}', '{% url 'championship:admin_season_delete' s.year %}')">
+              Delete
+            </button>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3" style="text-align:center;color:var(--grey);padding:2rem;">No seasons found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

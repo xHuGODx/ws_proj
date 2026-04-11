@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Login — F1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --red:   #E10600;
+      --red-d: #b30500;
+      --black: #15151E;
+      --dark:  #1F1F27;
+      --panel: #242430;
+      --white: #FFFFFF;
+      --grey:  #909090;
+      --line:  #333340;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Barlow', sans-serif;
+      background: var(--black);
+      color: var(--white);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .login-wrap {
+      width: 100%;
+      max-width: 420px;
+      padding: 1rem;
+    }
+
+    /* ── Brand ── */
+    .login-brand {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    .login-brand-f1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: 3.5rem;
+      color: var(--white);
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .login-brand-f1 span { color: var(--red); }
+    .login-brand-sub {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 0.78rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--grey);
+      margin-top: 0.4rem;
+    }
+
+    /* ── Card ── */
+    .login-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-top: 3px solid var(--red);
+      border-radius: 8px;
+      padding: 2rem;
+    }
+
+    .login-card-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: 1.4rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 0.25rem;
+    }
+    .login-card-sub {
+      font-size: 0.82rem;
+      color: var(--grey);
+      margin-bottom: 1.75rem;
+    }
+
+    /* ── Form ── */
+    .field { margin-bottom: 1.25rem; }
+    .field label {
+      display: block;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--grey);
+      margin-bottom: 0.45rem;
+    }
+    .field input {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      background: var(--dark);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--white);
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.95rem;
+      transition: border-color .15s;
+    }
+    .field input:focus { outline: none; border-color: var(--red); }
+    .field input::placeholder { color: var(--grey); }
+
+    .btn-login {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: 1rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background .15s;
+      margin-top: 0.5rem;
+    }
+    .btn-login:hover { background: var(--red-d); }
+
+    /* ── Errors ── */
+    .error-list {
+      list-style: none;
+      margin-bottom: 1.25rem;
+    }
+    .error-list li {
+      background: rgba(225,6,0,.1);
+      border-left: 3px solid var(--red);
+      color: #fca5a5;
+      padding: 0.6rem 0.9rem;
+      font-size: 0.88rem;
+      border-radius: 0 4px 4px 0;
+      margin-bottom: 0.4rem;
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--grey);
+      text-decoration: none;
+    }
+    .back-link:hover { color: var(--white); }
+  </style>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-brand">
+    <div class="login-brand-f1">F<span>1</span></div>
+    <div class="login-brand-sub">Admin Panel</div>
+  </div>
+
+  <div class="login-card">
+    <div class="login-card-title">Sign In</div>
+    <div class="login-card-sub">Staff access only</div>
+
+    {% if form.non_field_errors %}
+    <ul class="error-list">
+      {% for err in form.non_field_errors %}<li>{{ err }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="field">
+        <label for="id_username">Username</label>
+        <input id="id_username" type="text" name="username"
+               value="{{ form.username.value|default:'' }}"
+               placeholder="admin" autocomplete="username" autofocus>
+        {% for err in form.username.errors %}<div style="color:#fca5a5;font-size:0.8rem;margin-top:0.3rem;">{{ err }}</div>{% endfor %}
+      </div>
+      <div class="field">
+        <label for="id_password">Password</label>
+        <input id="id_password" type="password" name="password"
+               placeholder="••••••••" autocomplete="current-password">
+        {% for err in form.password.errors %}<div style="color:#fca5a5;font-size:0.8rem;margin-top:0.3rem;">{{ err }}</div>{% endfor %}
+      </div>
+      <button type="submit" class="btn-login">Enter</button>
+    </form>
+  </div>
+
+  <a class="back-link" href="{% url 'championship:home' %}">&larr; Back to site</a>
+</div>
+</body>
+</html>

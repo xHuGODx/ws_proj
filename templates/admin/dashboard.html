@@ -1,0 +1,71 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Dashboard — Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <h1 class="admin-page-title">Dashboard</h1>
+  <a href="{% url 'championship:home' %}" class="btn btn-secondary"
+     style="font-size:0.8rem;">&#8594; View site</a>
+</div>
+
+<p style="color:var(--grey);font-size:0.9rem;margin-bottom:1.5rem;">
+  Manage all core F1 data in the knowledge graph. Wins, podiums and standings are derived automatically from race results.
+</p>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-bottom:2rem;">
+  {% for s in stats %}
+  <a href="{% url 'championship:'|add:s.url %}" style="text-decoration:none;">
+    <div style="background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--red);border-radius:8px;padding:1.25rem 1.5rem;transition:border-color .15s;"
+         onmouseover="this.style.borderColor='var(--red)'"
+         onmouseout="this.style.borderTopColor='var(--red)';this.style.borderRightColor='var(--line)';this.style.borderBottomColor='var(--line)';this.style.borderLeftColor='var(--line)'">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:2.4rem;color:var(--red);line-height:1;">
+        {{ s.value }}
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--grey);margin-top:0.3rem;">
+        {{ s.label }}
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+
+<!-- Quick actions -->
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;">
+  <div style="background:var(--dark);border-bottom:2px solid var(--red);padding:0.7rem 1.25rem;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--grey);">
+    Quick Actions
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1px;background:var(--line);">
+    <a href="{% url 'championship:admin_driver_add' %}"
+       style="background:var(--panel);padding:1rem 1.25rem;text-decoration:none;display:flex;flex-direction:column;gap:0.25rem;transition:background .15s;"
+       onmouseover="this.style.background='var(--panel-l)'" onmouseout="this.style.background='var(--panel)'">
+      <span style="font-size:1.2rem;">&#43;</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.88rem;color:var(--white);">Add Driver</span>
+    </a>
+    <a href="{% url 'championship:admin_constructor_add' %}"
+       style="background:var(--panel);padding:1rem 1.25rem;text-decoration:none;display:flex;flex-direction:column;gap:0.25rem;transition:background .15s;"
+       onmouseover="this.style.background='var(--panel-l)'" onmouseout="this.style.background='var(--panel)'">
+      <span style="font-size:1.2rem;">&#43;</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.88rem;color:var(--white);">Add Constructor</span>
+    </a>
+    <a href="{% url 'championship:admin_circuit_add' %}"
+       style="background:var(--panel);padding:1rem 1.25rem;text-decoration:none;display:flex;flex-direction:column;gap:0.25rem;transition:background .15s;"
+       onmouseover="this.style.background='var(--panel-l)'" onmouseout="this.style.background='var(--panel)'">
+      <span style="font-size:1.2rem;">&#43;</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.88rem;color:var(--white);">Add Circuit</span>
+    </a>
+    <a href="{% url 'championship:admin_race_add' %}"
+       style="background:var(--panel);padding:1rem 1.25rem;text-decoration:none;display:flex;flex-direction:column;gap:0.25rem;transition:background .15s;"
+       onmouseover="this.style.background='var(--panel-l)'" onmouseout="this.style.background='var(--panel)'">
+      <span style="font-size:1.2rem;">&#43;</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.88rem;color:var(--white);">Add Race</span>
+    </a>
+    <a href="{% url 'championship:admin_season_add' %}"
+       style="background:var(--panel);padding:1rem 1.25rem;text-decoration:none;display:flex;flex-direction:column;gap:0.25rem;transition:background .15s;"
+       onmouseover="this.style.background='var(--panel-l)'" onmouseout="this.style.background='var(--panel)'">
+      <span style="font-size:1.2rem;">&#43;</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.88rem;color:var(--white);">Add Season</span>
+    </a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Drivers — Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <h1 class="admin-page-title">Drivers</h1>
+  <a href="{% url 'championship:admin_driver_add' %}" class="btn btn-primary">&#43; Add Driver</a>
+</div>
+
+<div class="admin-table-wrap">
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Code</th>
+        <th>Nationality</th>
+        <th>DOB</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in drivers %}
+      <tr>
+        <td style="color:var(--grey);font-size:0.8rem;">{{ d.driverId }}</td>
+        <td style="font-family:'Barlow Condensed',sans-serif;font-weight:700;">{{ d.label }}</td>
+        <td style="color:var(--grey);font-family:'Barlow Condensed',sans-serif;letter-spacing:0.06em;">
+          {{ d.code|default:"—" }}
+        </td>
+        <td style="color:var(--grey);">{{ d.nationality|default:"—" }}</td>
+        <td style="color:var(--grey);font-size:0.85rem;">{{ d.dob|default:"—" }}</td>
+        <td>
+          <div class="action-btns">
+            <a class="btn-edit" href="{% url 'championship:admin_driver_edit' d.driverId %}">Edit</a>
+            <button class="btn-del"
+                    onclick="openConfirm('{{ d.label|escapejs }}', '{% url 'championship:admin_driver_delete' d.driverId %}')">
+              Delete
+            </button>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" style="text-align:center;color:var(--grey);padding:2rem;">No drivers found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

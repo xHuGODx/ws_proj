@@ -1,0 +1,72 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ action }} Circuit — Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <div>
+    <a href="{% url 'championship:admin_circuits' %}"
+       style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:0.82rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--grey);text-decoration:none;">
+      &larr; Circuits
+    </a>
+    <h1 class="admin-page-title" style="margin-top:0.3rem;">
+      {{ action }} Circuit{% if label %}: <span style="color:var(--red);">{{ label }}</span>{% endif %}
+    </h1>
+  </div>
+</div>
+
+<div class="admin-form-card">
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-grid">
+
+      <div class="field-group field-full">
+        <label for="id_name">Name</label>
+        <input id="id_name" type="text" name="name"
+               value="{{ form.name.value|default:'' }}" placeholder="Circuit de Monaco" required>
+        {% for e in form.name.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="field-group">
+        <label for="id_location">Location / City</label>
+        <input id="id_location" type="text" name="location"
+               value="{{ form.location.value|default:'' }}" placeholder="Monte Carlo">
+        {% for e in form.location.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="field-group">
+        <label for="id_country">Country</label>
+        <input id="id_country" type="text" name="country"
+               value="{{ form.country.value|default:'' }}" placeholder="Monaco">
+        {% for e in form.country.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="field-group">
+        <label for="id_lat">Latitude</label>
+        <input id="id_lat" type="number" step="any" name="lat"
+               value="{{ form.lat.value|default:'' }}" placeholder="43.7347">
+        {% for e in form.lat.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="field-group">
+        <label for="id_lng">Longitude</label>
+        <input id="id_lng" type="number" step="any" name="lng"
+               value="{{ form.lng.value|default:'' }}" placeholder="7.4211">
+        {% for e in form.lng.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="field-group field-full">
+        <label for="id_url">Wikipedia URL</label>
+        <input id="id_url" type="url" name="url"
+               value="{{ form.url.value|default:'' }}" placeholder="https://en.wikipedia.org/wiki/…">
+        {% for e in form.url.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">{{ action }} Circuit</button>
+      <a href="{% url 'championship:admin_circuits' %}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

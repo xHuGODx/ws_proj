@@ -1,0 +1,44 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Circuits — Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <h1 class="admin-page-title">Circuits</h1>
+  <a href="{% url 'championship:admin_circuit_add' %}" class="btn btn-primary">&#43; Add Circuit</a>
+</div>
+
+<div class="admin-table-wrap">
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Location</th>
+        <th>Country</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in circuits %}
+      <tr>
+        <td style="color:var(--grey);font-size:0.8rem;">{{ c.circuitId }}</td>
+        <td style="font-family:'Barlow Condensed',sans-serif;font-weight:700;">{{ c.label }}</td>
+        <td style="color:var(--grey);">{{ c.location|default:"—" }}</td>
+        <td style="color:var(--grey);">{{ c.country|default:"—" }}</td>
+        <td>
+          <div class="action-btns">
+            <a class="btn-edit" href="{% url 'championship:admin_circuit_edit' c.circuitId %}">Edit</a>
+            <button class="btn-del"
+                    onclick="openConfirm('{{ c.label|escapejs }}', '{% url 'championship:admin_circuit_delete' c.circuitId %}')">
+              Delete
+            </button>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" style="text-align:center;color:var(--grey);padding:2rem;">No circuits found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

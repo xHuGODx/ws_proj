@@ -1,0 +1,80 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ action }} Driver — Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <div>
+    <a href="{% url 'championship:admin_drivers' %}"
+       style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:0.82rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--grey);text-decoration:none;">
+      &larr; Drivers
+    </a>
+    <h1 class="admin-page-title" style="margin-top:0.3rem;">
+      {{ action }} Driver{% if label %}: <span style="color:var(--red);">{{ label }}</span>{% endif %}
+    </h1>
+  </div>
+</div>
+
+<div class="admin-form-card">
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-grid">
+
+      <div class="field-group">
+        <label for="id_forename">{{ form.forename.label }}</label>
+        <input id="id_forename" type="text" name="forename"
+               value="{{ form.forename.value|default:'' }}" placeholder="Lewis" required>
+        {% for e in form.forename.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="field-group">
+        <label for="id_surname">{{ form.surname.label }}</label>
+        <input id="id_surname" type="text" name="surname"
+               value="{{ form.surname.value|default:'' }}" placeholder="Hamilton" required>
+        {% for e in form.surname.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="field-group">
+        <label for="id_code">{{ form.code.label }}</label>
+        <input id="id_code" type="text" name="code" maxlength="3"
+               value="{{ form.code.value|default:'' }}" placeholder="HAM"
+               style="text-transform:uppercase;">
+        {% for e in form.code.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="field-group">
+        <label for="id_number">{{ form.number.label }}</label>
+        <input id="id_number" type="number" name="number" min="1" max="99"
+               value="{{ form.number.value|default:'' }}" placeholder="44">
+        {% for e in form.number.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="field-group">
+        <label for="id_dob">{{ form.dob.label }}</label>
+        <input id="id_dob" type="date" name="dob"
+               value="{{ form.dob.value|default:'' }}">
+        {% for e in form.dob.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="field-group">
+        <label for="id_nationality">{{ form.nationality.label }}</label>
+        <input id="id_nationality" type="text" name="nationality"
+               value="{{ form.nationality.value|default:'' }}" placeholder="British">
+        {% for e in form.nationality.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="field-group field-full">
+        <label for="id_url">{{ form.url.label }}</label>
+        <input id="id_url" type="url" name="url"
+               value="{{ form.url.value|default:'' }}" placeholder="https://en.wikipedia.org/wiki/…">
+        {% for e in form.url.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">{{ action }} Driver</button>
+      <a href="{% url 'championship:admin_drivers' %}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

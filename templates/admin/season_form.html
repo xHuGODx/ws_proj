@@ -1,0 +1,51 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ action }} Season — Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <div>
+    <a href="{% url 'championship:admin_seasons' %}"
+       style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:0.82rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--grey);text-decoration:none;">
+      &larr; Seasons
+    </a>
+    <h1 class="admin-page-title" style="margin-top:0.3rem;">
+      {{ action }} Season{% if year %}: <span style="color:var(--red);">{{ year }}</span>{% endif %}
+    </h1>
+  </div>
+</div>
+
+<div class="admin-form-card">
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-grid">
+
+      <div class="field-group">
+        <label for="id_year">Year</label>
+        <input id="id_year" type="number" name="year" min="1950" max="2100"
+               value="{{ form.year.value|default:'' }}" placeholder="2025"
+               {% if action == 'Edit' %}readonly style="opacity:0.5;cursor:not-allowed;"{% endif %}
+               required>
+        {% for e in form.year.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+        {% if action == 'Edit' %}
+        <div style="font-size:0.75rem;color:var(--grey);margin-top:0.25rem;">
+          Year is the identity of a season and cannot be changed.
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="field-group">
+        <label for="id_url">Wikipedia URL</label>
+        <input id="id_url" type="url" name="url"
+               value="{{ form.url.value|default:'' }}" placeholder="https://en.wikipedia.org/wiki/…">
+        {% for e in form.url.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">{{ action }} Season</button>
+      <a href="{% url 'championship:admin_seasons' %}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

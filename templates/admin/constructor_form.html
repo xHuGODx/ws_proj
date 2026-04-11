@@ -1,0 +1,51 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ action }} Constructor — Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <div>
+    <a href="{% url 'championship:admin_constructors' %}"
+       style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:0.82rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--grey);text-decoration:none;">
+      &larr; Constructors
+    </a>
+    <h1 class="admin-page-title" style="margin-top:0.3rem;">
+      {{ action }} Constructor{% if label %}: <span style="color:var(--red);">{{ label }}</span>{% endif %}
+    </h1>
+  </div>
+</div>
+
+<div class="admin-form-card">
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-grid">
+
+      <div class="field-group field-full">
+        <label for="id_name">Name</label>
+        <input id="id_name" type="text" name="name"
+               value="{{ form.name.value|default:'' }}" placeholder="Ferrari" required>
+        {% for e in form.name.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="field-group">
+        <label for="id_nationality">Nationality</label>
+        <input id="id_nationality" type="text" name="nationality"
+               value="{{ form.nationality.value|default:'' }}" placeholder="Italian">
+        {% for e in form.nationality.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="field-group">
+        <label for="id_url">Wikipedia URL</label>
+        <input id="id_url" type="url" name="url"
+               value="{{ form.url.value|default:'' }}" placeholder="https://en.wikipedia.org/wiki/…">
+        {% for e in form.url.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">{{ action }} Constructor</button>
+      <a href="{% url 'championship:admin_constructors' %}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

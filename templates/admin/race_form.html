@@ -1,0 +1,78 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ action }} Race — Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <div>
+    <a href="{% url 'championship:admin_races' %}"
+       style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:0.82rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--grey);text-decoration:none;">
+      &larr; Races
+    </a>
+    <h1 class="admin-page-title" style="margin-top:0.3rem;">
+      {{ action }} Race{% if label %}: <span style="color:var(--red);">{{ label }}</span>{% endif %}
+    </h1>
+  </div>
+</div>
+
+<div class="admin-form-card">
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-grid">
+
+      <div class="field-group field-full">
+        <label for="id_name">Race Name</label>
+        <input id="id_name" type="text" name="name"
+               value="{{ form.name.value|default:'' }}" placeholder="Monaco Grand Prix" required>
+        {% for e in form.name.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="field-group">
+        <label for="id_year">Year</label>
+        <input id="id_year" type="number" name="year" min="1950" max="2100"
+               value="{{ form.year.value|default:'' }}" placeholder="2024" required>
+        {% for e in form.year.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="field-group">
+        <label for="id_round">Round</label>
+        <input id="id_round" type="number" name="round" min="1"
+               value="{{ form.round.value|default:'' }}" placeholder="8" required>
+        {% for e in form.round.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="field-group field-full">
+        <label for="id_circuit_id">Circuit</label>
+        <select id="id_circuit_id" name="circuit_id" required>
+          {% for val, label in form.circuit_id.field.choices %}
+          <option value="{{ val }}"
+            {% if form.circuit_id.value == val|stringformat:"s" %}selected{% endif %}>
+            {{ label }}
+          </option>
+          {% endfor %}
+        </select>
+        {% for e in form.circuit_id.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="field-group">
+        <label for="id_date">Date</label>
+        <input id="id_date" type="date" name="date"
+               value="{{ form.date.value|default:'' }}">
+        {% for e in form.date.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="field-group">
+        <label for="id_url">Wikipedia URL</label>
+        <input id="id_url" type="url" name="url"
+               value="{{ form.url.value|default:'' }}" placeholder="https://en.wikipedia.org/wiki/…">
+        {% for e in form.url.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">{{ action }} Race</button>
+      <a href="{% url 'championship:admin_races' %}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,444 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<style>
+  /* ── Admin layout: sidebar + content ── */
+  .admin-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  /* ── Sidebar ── */
+  .admin-sidebar {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--red);
+    border-radius: 8px;
+    overflow: hidden;
+    position: sticky;
+    top: 5rem;
+  }
+
+  .admin-sidebar-header {
+    padding: 1rem 1.25rem 0.75rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .admin-sidebar-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--grey);
+  }
+
+  .admin-sidebar-user {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--white);
+    margin-top: 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .admin-nav { list-style: none; padding: 0.5rem 0; }
+
+  .admin-nav-section {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--grey);
+    padding: 0.75rem 1.25rem 0.25rem;
+  }
+
+  .admin-nav li a {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 1.25rem;
+    color: var(--grey);
+    text-decoration: none;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    border-left: 3px solid transparent;
+    transition: color .15s, background .15s, border-color .15s;
+  }
+
+  .admin-nav li a:hover {
+    color: var(--white);
+    background: var(--dark);
+    border-left-color: var(--grey-d);
+  }
+
+  .admin-nav li a.active {
+    color: var(--white);
+    background: var(--dark);
+    border-left-color: var(--red);
+  }
+
+  .admin-nav-icon {
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 3px;
+    background: var(--grey-d);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.62rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    color: var(--white);
+    flex-shrink: 0;
+    letter-spacing: 0.02em;
+  }
+
+  .admin-nav li a.active .admin-nav-icon,
+  .admin-nav li a:hover  .admin-nav-icon { background: var(--red); }
+
+  .admin-nav-sep {
+    height: 1px;
+    background: var(--line);
+    margin: 0.5rem 1.25rem;
+  }
+
+  .admin-logout {
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .admin-logout a {
+    display: block;
+    text-align: center;
+    padding: 0.45rem;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    color: var(--grey);
+    text-decoration: none;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: border-color .15s, color .15s;
+  }
+
+  .admin-logout a:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── Content area ── */
+  .admin-content { min-width: 0; }
+
+  .admin-page-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .admin-page-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    line-height: 1;
+    color: var(--white);
+  }
+
+  /* ── Admin table ── */
+  .admin-table-wrap {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  .admin-table thead tr {
+    border-bottom: 2px solid var(--red);
+    background: var(--dark);
+  }
+
+  .admin-table th {
+    padding: 0.7rem 1rem;
+    text-align: left;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey);
+    white-space: nowrap;
+  }
+
+  .admin-table td {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+    color: var(--white);
+  }
+
+  .admin-table tr:last-child td { border-bottom: none; }
+  .admin-table tbody tr:hover td { background: var(--panel-l); }
+
+  /* ── Form card ── */
+  .admin-form-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--red);
+    border-radius: 8px;
+    padding: 1.75rem 2rem;
+    max-width: 680px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 1.5rem;
+  }
+
+  .form-grid .field-full { grid-column: 1 / -1; }
+
+  .field-group { display: flex; flex-direction: column; gap: 0.4rem; }
+
+  .field-group label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--grey);
+  }
+
+  .field-group input,
+  .field-group select {
+    padding: 0.6rem 0.85rem;
+    background: var(--dark);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.92rem;
+    transition: border-color .15s;
+    width: 100%;
+  }
+
+  .field-group select option { background: var(--dark); }
+  .field-group input:focus,
+  .field-group select:focus { outline: none; border-color: var(--red); }
+  .field-group input::placeholder { color: var(--grey); }
+
+  .field-error {
+    color: #fca5a5;
+    font-size: 0.78rem;
+    margin-top: 0.2rem;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+  }
+
+  /* ── Action buttons in table ── */
+  .action-btns { display: flex; gap: 0.4rem; }
+
+  .btn-edit {
+    display: inline-block;
+    padding: 0.3rem 0.75rem;
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    color: var(--grey);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: border-color .15s, color .15s;
+    cursor: pointer;
+  }
+  .btn-edit:hover { border-color: var(--white); color: var(--white); }
+
+  .btn-del {
+    display: inline-block;
+    padding: 0.3rem 0.75rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    color: var(--grey);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .btn-del:hover { border-color: var(--red); color: var(--red); background: rgba(225,6,0,.08); }
+
+  /* ── Confirm delete overlay ── */
+  .confirm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.65);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+  }
+  .confirm-overlay.open { display: flex; }
+
+  .confirm-box {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--red);
+    border-radius: 8px;
+    padding: 2rem;
+    max-width: 380px;
+    width: 90%;
+    text-align: center;
+  }
+
+  .confirm-box-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1.3rem;
+    color: var(--white);
+    margin-bottom: 0.5rem;
+  }
+
+  .confirm-box-body {
+    font-size: 0.9rem;
+    color: var(--grey);
+    margin-bottom: 1.5rem;
+  }
+
+  .confirm-actions { display: flex; gap: 0.75rem; justify-content: center; }
+
+  @media (max-width: 860px) {
+    .admin-layout { grid-template-columns: 1fr; }
+    .admin-sidebar { position: static; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid .field-full { grid-column: 1; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <div class="admin-sidebar-title">Admin Panel</div>
+      <div class="admin-sidebar-user">{{ request.user.username }}</div>
+    </div>
+    <ul class="admin-nav">
+      <li class="admin-nav-section">Overview</li>
+      <li>
+        <a href="{% url 'championship:admin_dashboard' %}"
+           {% if request.resolver_match.url_name == 'admin_dashboard' %}class="active"{% endif %}>
+          <span class="admin-nav-icon">&#8962;</span> Dashboard
+        </a>
+      </li>
+
+      <div class="admin-nav-sep"></div>
+      <li class="admin-nav-section">Entities</li>
+
+      <li>
+        <a href="{% url 'championship:admin_drivers' %}"
+           {% if 'admin_driver' in request.resolver_match.url_name %}class="active"{% endif %}>
+          <span class="admin-nav-icon">DRV</span> Drivers
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'championship:admin_constructors' %}"
+           {% if 'admin_constructor' in request.resolver_match.url_name %}class="active"{% endif %}>
+          <span class="admin-nav-icon">CTR</span> Constructors
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'championship:admin_circuits' %}"
+           {% if 'admin_circuit' in request.resolver_match.url_name %}class="active"{% endif %}>
+          <span class="admin-nav-icon">TRK</span> Circuits
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'championship:admin_races' %}"
+           {% if 'admin_race' in request.resolver_match.url_name %}class="active"{% endif %}>
+          <span class="admin-nav-icon">RCE</span> Races
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'championship:admin_seasons' %}"
+           {% if 'admin_season' in request.resolver_match.url_name %}class="active"{% endif %}>
+          <span class="admin-nav-icon">SSN</span> Seasons
+        </a>
+      </li>
+    </ul>
+    <div class="admin-logout">
+      <a href="{% url 'championship:admin_logout' %}">&#8594; Sign out</a>
+    </div>
+  </aside>
+
+  <!-- ── Main content ── -->
+  <div class="admin-content">
+    {% if messages %}
+    <ul class="messages">
+      {% for msg in messages %}
+      <li class="{{ msg.tags }}">{{ msg }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% block admin_content %}{% endblock %}
+  </div>
+
+</div>
+
+<!-- ── Confirm delete modal ── -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-box-title">Confirm Delete</div>
+    <div class="confirm-box-body" id="confirmMsg">This action cannot be undone.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-secondary" onclick="closeConfirm()">Cancel</button>
+      <form id="confirmForm" method="post" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">Delete</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openConfirm(label, actionUrl) {
+    document.getElementById('confirmMsg').textContent = 'Delete "' + label + '"? This cannot be undone.';
+    document.getElementById('confirmForm').action = actionUrl;
+    document.getElementById('confirmOverlay').classList.add('open');
+  }
+  function closeConfirm() {
+    document.getElementById('confirmOverlay').classList.remove('open');
+  }
+  document.getElementById('confirmOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeConfirm();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Races — Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <h1 class="admin-page-title">Races</h1>
+  <a href="{% url 'championship:admin_race_add' %}" class="btn btn-primary">&#43; Add Race</a>
+</div>
+
+<div class="admin-table-wrap">
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Year</th>
+        <th>Rd</th>
+        <th>Circuit</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in races %}
+      <tr>
+        <td style="color:var(--grey);font-size:0.8rem;">{{ r.raceId }}</td>
+        <td style="font-family:'Barlow Condensed',sans-serif;font-weight:700;">{{ r.label }}</td>
+        <td style="font-family:'Barlow Condensed',sans-serif;font-weight:800;color:var(--red);">{{ r.year }}</td>
+        <td style="color:var(--grey);">{{ r.round }}</td>
+        <td style="color:var(--grey);font-size:0.85rem;">{{ r.circuitLabel|default:"—" }}</td>
+        <td>
+          <div class="action-btns">
+            <a class="btn-edit" href="{% url 'championship:admin_race_edit' r.raceId %}">Edit</a>
+            <button class="btn-del"
+                    onclick="openConfirm('{{ r.label|escapejs }}', '{% url 'championship:admin_race_delete' r.raceId %}')">
+              Delete
+            </button>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" style="text-align:center;color:var(--grey);padding:2rem;">No races found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -649,6 +649,23 @@
     <a href="{% url 'championship:races' %}"        {% if request.resolver_match.url_name == 'races'        or request.resolver_match.url_name == 'race_detail'        %}class="active"{% endif %}>Races</a>
     <a href="{% url 'championship:circuits' %}"     {% if request.resolver_match.url_name == 'circuits'     or request.resolver_match.url_name == 'circuit_detail'     %}class="active"{% endif %}>Circuits</a>
   </div>
+  {% if user.is_authenticated %}
+  <div style="display:inline-flex;align-items:center;gap:0.4rem;flex-shrink:0;">
+    <a href="{% url 'championship:admin_dashboard' %}"
+       style="display:inline-flex;align-items:center;gap:0.35rem;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--grey);text-decoration:none;padding:0.35rem 0.7rem;border:1px solid var(--grey-d);border-radius:4px;transition:border-color .15s,color .15s;"
+       onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+       onmouseout="this.style.borderColor='var(--grey-d)';this.style.color='var(--grey)'">
+      &#9881; Admin
+    </a>
+    <a href="{% url 'championship:admin_logout' %}"
+       style="display:inline-flex;align-items:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--grey);text-decoration:none;padding:0.35rem 0.7rem;border:1px solid var(--grey-d);border-radius:4px;transition:border-color .15s,color .15s;"
+       onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+       onmouseout="this.style.borderColor='var(--grey-d)';this.style.color='var(--grey)'"
+       title="Sign out {{ request.user.username }}">
+      &#8594; Out
+    </a>
+  </div>
+  {% endif %}
   <button class="nav-burger" id="navBurger" aria-label="Menu">&#9776;</button>
   <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle light/dark mode">☀</button>
 </nav>
