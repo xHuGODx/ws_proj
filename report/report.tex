@@ -213,7 +213,9 @@ identity of the sport.
         constructors, circuits, races, and seasons in detail.
   \item Provide an authenticated admin panel allowing staff to create, update,
         and delete core entities directly in the knowledge graph via SPARQL
-        UPDATE.
+        UPDATE, including relation-backed fields.
+  \item Add higher-level knowledge-graph operations such as batch CSV import,
+        dry-run preview, rollback, and natural-language querying over SPARQL.
 \end{itemize}
 
 \subsection{Technology Stack}
@@ -231,6 +233,7 @@ SPARQL Client      & SPARQLWrapper            & HTTP bridge to GraphDB endpoint 
 Serialisation      & RDFLib                   & CSV $\rightarrow$ RDF conversion \\
 Auth               & Django contrib.auth      & Session-based login for admin \\
 Frontend           & Vanilla HTML/CSS/JS      & Responsive dark-theme UI \\
+LLM Integration    & Gemini API               & Natural-language to SPARQL assistant \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -738,6 +741,11 @@ the set of predicates emitted. Because the DELETE removes \emph{all} predicates
 before the INSERT, optional fields that were previously set and are now absent
 (e.g.\ a driver code that was cleared) are cleanly removed from the graph.
 
+For relation-backed forms the same pattern is reused. For example, editing a
+driver can now also replace or clear the \texttt{f1:constructor} object
+property, allowing the admin panel to modify not only scalar literals but also
+links between RDF entities.
+
 \subsubsection{Entity Deletion (DELETE WHERE)}
 
 Deleting an entity removes all triples where the entity appears as the subject:
@@ -760,6 +768,26 @@ maintained through UPDATE operations. Deleting a driver removes only the driver
 entity; the result triples that reference it are preserved, though they become
 orphaned references.
 \end{infobox}
+
+\subsubsection{Batch Import, Preview, and Rollback}
+
+The admin panel was extended with a race-results import workflow under
+\texttt{/admin-panel/imports/race-results/}. An administrator selects a race,
+uploads a CSV file, and receives a dry-run preview before any SPARQL UPDATE is
+sent to GraphDB. The preview shows:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item new result triples to be inserted;
+  \item existing result triples that will be replaced;
+  \item unresolved references (driver, constructor, or status IDs not found in the graph);
+  \item duplicate or conflicting rows in the uploaded CSV.
+\end{itemize}
+
+Only after explicit confirmation is the generated SPARQL batch update executed.
+Each confirmed import stores a corresponding rollback record in Django's
+relational database, including enough metadata to reverse the exact SPARQL
+operation later. The admin dashboard exposes an ``undo latest batch'' style
+workflow for these recorded imports.
 
 % =============================================================================
 \section{Application Functionalities (UI)}
@@ -892,6 +920,24 @@ The season detail page is the richest summary page in the application:
         to \texttt{constructor\_standings}, showing team, points, and wins.
 \end{itemize}
 
+\subsubsection{LLM Assistant}
+
+The public interface now includes an \texttt{/assistant/} page where users can
+ask natural-language questions about the Formula 1 knowledge graph. The server
+uses a Gemini model with a hardcoded schema/context prompt describing the main
+classes, predicates, and identifier conventions of the RDF graph. The workflow
+is two-stage:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item Gemini first generates a read-only \texttt{SELECT} SPARQL query.
+  \item The application executes that query against GraphDB and sends the
+        resulting bindings back to Gemini, which returns a natural-language answer.
+\end{itemize}
+
+The generated SPARQL is never shown to the end user. For safety, only
+\texttt{SELECT} queries are accepted; any attempt by the model to generate an
+update query is rejected server-side.
+
 \subsection{Admin Panel}
 
 The admin panel is accessible at \texttt{/admin-panel/} and requires login with
@@ -902,6 +948,15 @@ a Django staff account. It features:
   \item \textbf{Dashboard} --- live entity counts with quick-add shortcuts.
   \item \textbf{Entity management} for Drivers, Constructors, Circuits, Races,
         and Seasons: list view with inline Edit / Delete actions and Add form.
+  \item \textbf{Relation-aware editing} --- entity forms can modify RDF object
+        properties such as the team/constructor linked to a driver.
+  \item \textbf{Race results CSV import} --- upload, validate, preview, and
+        confirm batch result imports for a selected race.
+  \item \textbf{Data quality checks} --- dedicated page highlighting races
+        without circuits, drivers without constructors, duplicate IDs/labels,
+        dangling references, and broken result links.
+  \item \textbf{Rollback of batch operations} --- the most recent recorded
+        batch import can be reversed from the admin interface.
   \item \textbf{Confirm-delete modal} --- clicking Delete opens a modal
         requiring confirmation before the SPARQL DELETE is executed.
   \item \textbf{Sidebar navigation} --- sticky left nav with active state
@@ -934,7 +989,7 @@ SPARQL queries, to a fully functional web interface.
   \item \textbf{Full RDF pipeline}: A Python script converts 13 CSV files into
         a consistent N-Triples RDF graph with correct datatype annotations,
         object property links between entities, and \texttt{rdfs:label} triples
-        for every entity.
+        for the main browsable entities.
 
   \item \textbf{Efficient SPARQL queries}: The anchoring strategy (using unique
         property predicates rather than \texttt{rdf:type}) proved essential for
@@ -950,6 +1005,15 @@ SPARQL queries, to a fully functional web interface.
   \item \textbf{Full CRUD via SPARQL UPDATE}: The admin interface demonstrates
         that GraphDB can serve as the single source of truth for both reads and
         writes, with no relational database involved for domain data.
+
+  \item \textbf{Operations-oriented admin tooling}: Beyond CRUD, the admin now
+        supports relation editing, batch race-result imports with dry-run
+        previews, rollback of recorded import operations, and graph integrity
+        checks.
+
+  \item \textbf{Natural-language query interface}: A Gemini-backed assistant
+        translates user questions into safe read-only SPARQL, executes them
+        against GraphDB, and returns human-readable answers.
 
   \item \textbf{Aesthetic and usability}: The application provides a polished
         consumer-grade interface with dark/light theme switching, responsive
@@ -984,13 +1048,13 @@ SPARQL queries, to a fully functional web interface.
 \subsection{Future Work}
 
 \begin{itemize}[leftmargin=1.5em]
-  \item Extend the admin panel to manage race results directly (changing positions,
-        points, and status for individual entries).
+  \item Extend the batch import pattern beyond race results to qualifying,
+        pit stops, lap times, and standings.
   \item Implement a public SPARQL explorer endpoint, allowing power users to
         run custom queries against the knowledge graph.
   \item Integrate live data from the current season via the Ergast API.
-  \item Inlcude and AI that allows users to ask natural language questions about the data, translating them
-        into SPARQL queries under the hood.
+  \item Replace the hardcoded assistant schema prompt with a richer ontology-aware
+        context builder generated from the graph itself.
 \end{itemize}
 
 % =============================================================================
@@ -1022,6 +1086,9 @@ DJANGO_SECRET_KEY=your-secret-key-here
 DJANGO_DEBUG=True
 GRAPHDB_BASE_URL=http://localhost:7200
 GRAPHDB_REPOSITORY=ws-formula1
+GEMINI_KEY=your-gemini-api-key
+# Optional: override the default Gemini model
+# GEMINI_MODEL=gemini-2.5-flash
 # Optional: if GraphDB requires authentication
 # GRAPHDB_USERNAME=admin
 # GRAPHDB_PASSWORD=your-password
@@ -1068,6 +1135,7 @@ python manage.py runserver
 \textbf{URL}                    & \textbf{Description} \\
 \midrule
 \texttt{/}                      & Homepage with live stats \\
+\texttt{/assistant/}            & Gemini-backed natural-language assistant \\
 \texttt{/drivers/}              & Drivers list \\
 \texttt{/constructors/}         & Constructors list \\
 \texttt{/circuits/}             & Circuits list \\
@@ -1075,6 +1143,8 @@ python manage.py runserver
 \texttt{/seasons/}              & Seasons list \\
 \texttt{/admin-panel/}          & Admin dashboard (login required) \\
 \texttt{/admin-panel/login/}    & Admin login page \\
+\texttt{/admin-panel/imports/race-results/} & Race results CSV import \\
+\texttt{/admin-panel/data-quality/} & Data quality checks \\
 \bottomrule
 \end{tabular}
 \end{center}
