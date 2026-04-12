@@ -70,3 +70,19 @@ class RaceForm(forms.Form):
 class SeasonForm(forms.Form):
     year = forms.IntegerField(min_value=1950, max_value=2100)
     url  = forms.URLField(required=False, label="Wikipedia URL")
+
+
+class RaceResultsImportForm(forms.Form):
+    race_id = forms.ChoiceField(choices=[], label="Race")
+    csv_file = forms.FileField(label="Results CSV")
+
+    def __init__(self, *args, race_choices=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if race_choices is not None:
+            self.fields["race_id"].choices = race_choices
+
+    def clean_csv_file(self):
+        upload = self.cleaned_data["csv_file"]
+        if not upload.name.lower().endswith(".csv"):
+            raise forms.ValidationError("Upload a CSV file.")
+        return upload

@@ -1,0 +1,94 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Data Quality — Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <div>
+    <h1 class="admin-page-title">Data Quality</h1>
+    <p style="color:var(--grey);font-size:0.9rem;margin-top:0.4rem;">
+      Graph integrity checks for missing links, duplicates, and dangling RDF references.
+    </p>
+  </div>
+</div>
+
+<div style="display:grid;gap:1rem;">
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th colspan="2">Races Without Circuits</th></tr></thead>
+      <tbody>
+        {% for row in checks.races_without_circuits %}
+        <tr><td>{{ row.raceId }}</td><td>{{ row.label }}</td></tr>
+        {% empty %}
+        <tr><td colspan="2" style="color:var(--grey);">No findings.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th colspan="2">Drivers Without Constructors</th></tr></thead>
+      <tbody>
+        {% for row in checks.drivers_without_constructors %}
+        <tr><td>{{ row.driverId }}</td><td>{{ row.label }}</td></tr>
+        {% empty %}
+        <tr><td colspan="2" style="color:var(--grey);">No findings.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>Result ID</th><th>Missing relation</th></tr></thead>
+      <tbody>
+        {% for row in checks.results_missing_driver_or_constructor %}
+        <tr><td>{{ row.resultId }}</td><td>{{ row.missing }}</td></tr>
+        {% empty %}
+        <tr><td colspan="2" style="color:var(--grey);">No findings.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>Duplicate label</th><th>Count</th></tr></thead>
+      <tbody>
+        {% for row in checks.duplicate_labels %}
+        <tr><td>{{ row.label }}</td><td>{{ row.count }}</td></tr>
+        {% empty %}
+        <tr><td colspan="2" style="color:var(--grey);">No findings.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>ID field</th><th>ID value</th><th>Count</th></tr></thead>
+      <tbody>
+        {% for row in checks.duplicate_ids %}
+        <tr><td>{{ row.field }}</td><td>{{ row.idValue }}</td><td>{{ row.count }}</td></tr>
+        {% empty %}
+        <tr><td colspan="3" style="color:var(--grey);">No findings.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>Source</th><th>Predicate</th><th>Dangling target</th></tr></thead>
+      <tbody>
+        {% for row in checks.dangling_uris %}
+        <tr><td>{{ row.source }}</td><td>{{ row.predicate }}</td><td>{{ row.target }}</td></tr>
+        {% empty %}
+        <tr><td colspan="3" style="color:var(--grey);">No findings.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

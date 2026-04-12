@@ -32,15 +32,19 @@ class GraphDBClient:
 
     def query(self, sparql: str) -> list[dict[str, str]]:
         """Run a SELECT query and return a flat list of row dicts {var: value}."""
-        wrapper = self._wrapper(self.query_endpoint)
-        wrapper.setReturnFormat(JSON)
-        wrapper.setQuery(PREFIXES + sparql)
-        response = wrapper.queryAndConvert()
-        bindings = response.get("results", {}).get("bindings", [])
+        bindings = self.query_bindings(sparql)
         return [
             {var: cell["value"] for var, cell in row.items()}
             for row in bindings
         ]
+
+    def query_bindings(self, sparql: str) -> list[dict[str, dict[str, str]]]:
+        """Run a SELECT query and return raw SPARQL JSON bindings."""
+        wrapper = self._wrapper(self.query_endpoint)
+        wrapper.setReturnFormat(JSON)
+        wrapper.setQuery(PREFIXES + sparql)
+        response = wrapper.queryAndConvert()
+        return response.get("results", {}).get("bindings", [])
 
     def healthcheck(self) -> dict[str, object]:
         # Use GraphDB's REST size endpoint — returns a plain integer, very fast.
@@ -61,4 +65,3 @@ class GraphDBClient:
         wrapper.setMethod(POST)
         wrapper.setQuery(PREFIXES + update_query)
         wrapper.query()
-

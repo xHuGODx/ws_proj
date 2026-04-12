@@ -66,6 +66,37 @@
       <span style="font-size:1.2rem;">&#43;</span>
       <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.88rem;color:var(--white);">Add Season</span>
     </a>
+    <a href="{% url 'championship:admin_race_results_import' %}"
+       style="background:var(--panel);padding:1rem 1.25rem;text-decoration:none;display:flex;flex-direction:column;gap:0.25rem;transition:background .15s;"
+       onmouseover="this.style.background='var(--panel-l)'" onmouseout="this.style.background='var(--panel)'">
+      <span style="font-size:1.2rem;">&#8682;</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.88rem;color:var(--white);">Import Results</span>
+    </a>
+    <a href="{% url 'championship:admin_data_quality' %}"
+       style="background:var(--panel);padding:1rem 1.25rem;text-decoration:none;display:flex;flex-direction:column;gap:0.25rem;transition:background .15s;"
+       onmouseover="this.style.background='var(--panel-l)'" onmouseout="this.style.background='var(--panel)'">
+      <span style="font-size:1.2rem;">&#10003;</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.88rem;color:var(--white);">Run Checks</span>
+    </a>
   </div>
 </div>
+
+{% if latest_batch %}
+<div style="background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--red);border-radius:8px;padding:1.25rem 1.5rem;margin-top:1rem;max-width:760px;">
+  <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:0.78rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--grey);margin-bottom:0.4rem;">
+    Latest Batch Operation
+  </div>
+  <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;color:var(--white);margin-bottom:0.35rem;">
+    {{ latest_batch.summary }}
+  </div>
+  <div style="color:var(--grey);font-size:0.88rem;margin-bottom:1rem;">
+    Created {{ latest_batch.created_at|date:"Y-m-d H:i" }}
+  </div>
+  <form method="post" action="{% url 'championship:admin_batch_rollback' latest_batch.id %}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{% url 'championship:admin_dashboard' %}">
+    <button type="submit" class="btn btn-secondary">Rollback Latest Batch</button>
+  </form>
+</div>
+{% endif %}
 {% endblock %}

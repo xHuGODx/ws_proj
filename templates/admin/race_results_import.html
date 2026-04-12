@@ -1,0 +1,192 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Race Results Import — Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <div>
+    <h1 class="admin-page-title">Race Results Import</h1>
+    <p style="color:var(--grey);font-size:0.9rem;margin-top:0.4rem;">
+      Upload a CSV, validate the RDF references, review the generated triples, then confirm the batch write.
+    </p>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:minmax(320px,680px) minmax(240px,1fr);gap:1rem;align-items:start;">
+  <div class="admin-form-card" style="max-width:none;">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="field-group field-full">
+          <label for="id_race_id">{{ form.race_id.label }}</label>
+          <select id="id_race_id" name="race_id" required>
+            {% for val, label in form.race_id.field.choices %}
+            <option value="{{ val }}" {% if form.race_id.value == val|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          {% for e in form.race_id.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="field-group field-full">
+          <label for="id_csv_file">{{ form.csv_file.label }}</label>
+          <input id="id_csv_file" type="file" name="csv_file" accept=".csv" required>
+          {% for e in form.csv_file.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Preview Import</button>
+        <a href="{% url 'championship:admin_results_import_template' %}" class="btn btn-secondary">Download Template</a>
+      </div>
+    </form>
+  </div>
+
+  <div style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1.25rem 1.4rem;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:0.76rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--grey);margin-bottom:0.8rem;">
+      Template Guidance
+    </div>
+    <p style="color:var(--grey);font-size:0.9rem;line-height:1.5;margin-bottom:0.9rem;">
+      Required columns: <code>{{ required_columns|join:", " }}</code>
+    </p>
+    <p style="color:var(--grey);font-size:0.9rem;line-height:1.5;margin-bottom:0.9rem;">
+      IDs must match existing RDF entities in GraphDB. The selected race supplies the <code>f1:race</code> relation for every row.
+    </p>
+    <details>
+      <summary style="cursor:pointer;color:var(--white);font-family:'Barlow Condensed',sans-serif;font-weight:700;">Sample CSV</summary>
+      <pre style="margin-top:0.8rem;background:var(--dark);border:1px solid var(--line);padding:0.9rem;border-radius:6px;white-space:pre-wrap;color:var(--grey);font-size:0.82rem;">{{ sample_csv }}</pre>
+    </details>
+  </div>
+</div>
+
+{% if latest_batch %}
+<div style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1rem 1.25rem;margin-top:1rem;max-width:680px;">
+  <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--grey);">Latest Reversible Batch</div>
+  <div style="margin-top:0.35rem;color:var(--white);">{{ latest_batch.summary }}</div>
+  <form method="post" action="{% url 'championship:admin_batch_rollback' latest_batch.id %}" style="margin-top:0.9rem;">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{% url 'championship:admin_race_results_import' %}">
+    <button type="submit" class="btn btn-secondary">Undo Latest Batch</button>
+  </form>
+</div>
+{% endif %}
+
+{% if preview %}
+<div style="margin-top:1.5rem;display:grid;gap:1rem;">
+  <div style="background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--red);border-radius:8px;padding:1.25rem 1.5rem;">
+    <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:0.74rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--grey);">Dry Run Summary</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1.25rem;color:var(--white);margin-top:0.2rem;">
+          {{ preview.race.label }}{% if preview.race.year %} · {{ preview.race.year }}{% endif %}
+        </div>
+      </div>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+        <div><div style="color:var(--red);font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:900;">{{ preview.row_count }}</div><div style="color:var(--grey);font-size:0.8rem;">CSV rows</div></div>
+        <div><div style="color:var(--red);font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:900;">{{ preview.replacements|length }}</div><div style="color:var(--grey);font-size:0.8rem;">Replacements</div></div>
+        <div><div style="color:var(--red);font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:900;">{{ preview.unresolved_references|length }}</div><div style="color:var(--grey);font-size:0.8rem;">Unresolved refs</div></div>
+      </div>
+    </div>
+    <div style="margin-top:1rem;color:var(--grey);font-size:0.88rem;">
+      No write has been sent to GraphDB yet. Confirmation is enabled only when blocking validation errors are absent.
+    </div>
+    <div class="form-actions">
+      <form method="post" action="{% url 'championship:admin_race_results_import_confirm' preview.token %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary" {% if not preview.can_confirm %}disabled style="opacity:.55;cursor:not-allowed;"{% endif %}>Confirm Import</button>
+      </form>
+    </div>
+  </div>
+
+  {% if preview.blocking_errors %}
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>Blocking Validation Errors</th></tr></thead>
+      <tbody>
+        {% for error in preview.blocking_errors %}
+        <tr><td style="color:#fca5a5;">{{ error }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if preview.unresolved_references %}
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>Line</th><th>Field</th><th>Value</th><th>Expected RDF target</th></tr></thead>
+      <tbody>
+        {% for issue in preview.unresolved_references %}
+        <tr>
+          <td>{{ issue.line }}</td>
+          <td>{{ issue.field }}</td>
+          <td>{{ issue.value }}</td>
+          <td>{{ issue.kind }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if preview.duplicates %}
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>Result ID</th><th>Original line</th><th>Duplicate line</th><th>Conflict</th></tr></thead>
+      <tbody>
+        {% for duplicate in preview.duplicates %}
+        <tr>
+          <td>{{ duplicate.resultId }}</td>
+          <td>{{ duplicate.existing_line }}</td>
+          <td>{{ duplicate.line }}</td>
+          <td>{% if duplicate.conflict %}Yes{% else %}No{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if preview.replacements %}
+  <div class="admin-table-wrap">
+    <table class="admin-table">
+      <thead><tr><th>Existing Result</th><th>Current Race</th><th>Current Driver</th><th>Current Constructor</th></tr></thead>
+      <tbody>
+        {% for item in preview.replacements %}
+        <tr>
+          <td>{{ item.resultId }}</td>
+          <td>{{ item.existingRaceId|default:"—" }}</td>
+          <td>{{ item.existingDriverId|default:"—" }}</td>
+          <td>{{ item.existingConstructorId|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1rem;">
+    <div style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1rem 1.2rem;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:0.74rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--grey);margin-bottom:0.7rem;">New Triples To Insert</div>
+      {% for item in preview.new_triples %}
+      <div style="margin-bottom:0.8rem;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--white);margin-bottom:0.25rem;">Result {{ item.resultId }}</div>
+        <pre style="background:var(--dark);border:1px solid var(--line);padding:0.8rem;border-radius:6px;white-space:pre-wrap;color:var(--grey);font-size:0.8rem;">{{ item.triples }}</pre>
+      </div>
+      {% empty %}
+      <div style="color:var(--grey);">No triples generated.</div>
+      {% endfor %}
+    </div>
+
+    <div style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1rem 1.2rem;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:0.74rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--grey);margin-bottom:0.7rem;">Existing Triples To Replace</div>
+      {% for item in preview.existing_triples %}
+      <div style="margin-bottom:0.8rem;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--white);margin-bottom:0.25rem;">Result {{ item.resultId }}</div>
+        <pre style="background:var(--dark);border:1px solid var(--line);padding:0.8rem;border-radius:6px;white-space:pre-wrap;color:var(--grey);font-size:0.8rem;">{{ item.triples }}</pre>
+      </div>
+      {% empty %}
+      <div style="color:var(--grey);">No existing result resources will be replaced.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

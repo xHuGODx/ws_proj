@@ -23,6 +23,11 @@ urlpatterns = [
     path("admin-panel/login/",   admin_views.admin_login,   name="admin_login"),
     path("admin-panel/logout/",  admin_views.admin_logout,  name="admin_logout"),
     path("admin-panel/",         admin_views.admin_dashboard, name="admin_dashboard"),
+    path("admin-panel/imports/race-results/", admin_views.admin_race_results_import, name="admin_race_results_import"),
+    path("admin-panel/imports/race-results/template.csv", admin_views.admin_results_import_template, name="admin_results_import_template"),
+    path("admin-panel/imports/race-results/<str:token>/confirm/", admin_views.admin_race_results_import_confirm, name="admin_race_results_import_confirm"),
+    path("admin-panel/operations/<int:batch_id>/rollback/", admin_views.admin_batch_rollback, name="admin_batch_rollback"),
+    path("admin-panel/data-quality/", admin_views.admin_data_quality, name="admin_data_quality"),
 
     path("admin-panel/drivers/",                       admin_views.admin_drivers,        name="admin_drivers"),
     path("admin-panel/drivers/add/",                   admin_views.admin_driver_add,     name="admin_driver_add"),

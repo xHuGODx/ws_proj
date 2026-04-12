@@ -1,21 +1,33 @@
 from __future__ import annotations
 
+from django.http import HttpResponse
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
+from django.utils import timezone
 
 from .forms import (
     CircuitForm,
     ConstructorForm,
     DriverForm,
     LoginForm,
+    RaceResultsImportForm,
     RaceForm,
     SeasonForm,
 )
+from .models import AdminBatchOperation
 from .services.graphdb import GraphDBClient
+from .services.imports import (
+    RESULT_FIELD_NAMES,
+    build_results_import_sample_csv,
+    race_choices,
+    result_import_template_response,
+    serialize_result_import_preview,
+)
 
 RESOURCE_BASE = "http://example.org/resource/"
+IMPORT_PREVIEW_SESSION_KEY = "admin_import_previews"
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -41,6 +53,25 @@ def _slug(text: str) -> str:
     """Derive a simple ref/slug from a name."""
     import re
     return re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_")
+
+
+def _store_import_preview(request, preview: dict) -> None:
+    previews = request.session.get(IMPORT_PREVIEW_SESSION_KEY, {})
+    previews[preview["token"]] = preview
+    request.session[IMPORT_PREVIEW_SESSION_KEY] = previews
+    request.session.modified = True
+
+
+def _load_import_preview(request, token: str) -> dict | None:
+    return request.session.get(IMPORT_PREVIEW_SESSION_KEY, {}).get(token)
+
+
+def _drop_import_preview(request, token: str) -> None:
+    previews = request.session.get(IMPORT_PREVIEW_SESSION_KEY, {})
+    if token in previews:
+        previews.pop(token)
+        request.session[IMPORT_PREVIEW_SESSION_KEY] = previews
+        request.session.modified = True
 
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
@@ -93,7 +124,194 @@ def admin_dashboard(request):
         {"label": "Races",        "value": counts.get("races",        "—"), "url": "admin_races"},
         {"label": "Seasons",      "value": counts.get("seasons",      "—"), "url": "admin_seasons"},
     ]
-    return render(request, "admin/dashboard.html", {"stats": stats})
+    latest_batch = AdminBatchOperation.objects.filter(rolled_back_at__isnull=True).first()
+    return render(request, "admin/dashboard.html", {"stats": stats, "latest_batch": latest_batch})
+
+
+@login_required(login_url="championship:admin_login")
+def admin_race_results_import(request):
+    db = GraphDBClient()
+    form = RaceResultsImportForm(
+        request.POST or None,
+        request.FILES or None,
+        race_choices=race_choices(db),
+    )
+    preview = None
+
+    if request.method == "POST" and form.is_valid():
+        preview = serialize_result_import_preview(
+            db,
+            form.cleaned_data["race_id"],
+            form.cleaned_data["csv_file"],
+        )
+        _store_import_preview(request, preview)
+
+    latest_batch = AdminBatchOperation.objects.filter(
+        kind="race-results-import",
+        rolled_back_at__isnull=True,
+    ).first()
+    return render(request, "admin/race_results_import.html", {
+        "form": form,
+        "preview": preview,
+        "latest_batch": latest_batch,
+        "required_columns": RESULT_FIELD_NAMES,
+        "sample_csv": build_results_import_sample_csv(),
+    })
+
+
+@login_required(login_url="championship:admin_login")
+def admin_race_results_import_confirm(request, token: str):
+    if request.method != "POST":
+        return redirect("championship:admin_race_results_import")
+
+    preview = _load_import_preview(request, token)
+    if not preview:
+        messages.error(request, "Import preview expired. Upload the CSV again.")
+        return redirect("championship:admin_race_results_import")
+    if not preview.get("can_confirm"):
+        messages.error(request, "Fix blocking validation issues before confirming the import.")
+        return redirect("championship:admin_race_results_import")
+
+    race = preview.get("race") or {}
+    race_id = preview.get("race_id") or race.get("raceId") or ""
+    race_label = preview.get("race_label") or race.get("label") or race_id
+    if not race_id:
+        messages.error(request, "Import preview is missing race metadata. Upload the CSV again.")
+        return redirect("championship:admin_race_results_import")
+
+    db = GraphDBClient()
+    db.run_update(preview["apply_update"])
+    AdminBatchOperation.objects.create(
+        kind="race-results-import",
+        target_ref=race_id,
+        summary=f'Race {race_id}: {preview["row_count"]} result rows imported from {preview["csv_name"]}',
+        metadata_json={
+            "race": {
+                "raceId": race_id,
+                "label": race_label,
+                "year": preview.get("race_year") or race.get("year", ""),
+                "round": preview.get("race_round") or race.get("round", ""),
+            },
+            "row_count": preview["row_count"],
+            "result_ids": [row["resultId"] for row in preview["rows"]],
+            "csv_name": preview["csv_name"],
+        },
+        apply_sparql=preview["apply_update"],
+        rollback_sparql=preview["rollback_update"],
+        created_by=request.user if request.user.is_authenticated else None,
+    )
+    _drop_import_preview(request, token)
+    messages.success(request, f'Imported {preview["row_count"]} race result rows for "{race_label}".')
+    return redirect("championship:admin_race_results_import")
+
+
+@login_required(login_url="championship:admin_login")
+def admin_batch_rollback(request, batch_id: int):
+    if request.method != "POST":
+        return redirect("championship:admin_dashboard")
+
+    batch = AdminBatchOperation.objects.filter(id=batch_id, rolled_back_at__isnull=True).first()
+    if not batch:
+        messages.error(request, "Batch operation not found or already rolled back.")
+        return redirect("championship:admin_dashboard")
+
+    db = GraphDBClient()
+    db.run_update(batch.rollback_sparql)
+    batch.rolled_back_at = timezone.now()
+    batch.save(update_fields=["rolled_back_at"])
+    messages.success(request, f'Rolled back batch operation: {batch.summary}')
+    return redirect(request.POST.get("next") or "championship:admin_dashboard")
+
+
+@login_required(login_url="championship:admin_login")
+def admin_results_import_template(request):
+    response = HttpResponse(result_import_template_response(), content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="race-results-template.csv"'
+    return response
+
+
+@login_required(login_url="championship:admin_login")
+def admin_data_quality(request):
+    db = GraphDBClient()
+    checks = {
+        "races_without_circuits": db.query("""
+            SELECT ?raceId ?label WHERE {
+              ?race f1:raceId ?raceId ;
+                    rdfs:label ?label .
+              FILTER NOT EXISTS { ?race f1:circuit ?circuit }
+            }
+            ORDER BY ?raceId
+        """),
+        "drivers_without_constructors": db.query("""
+            SELECT ?driverId ?label WHERE {
+              ?driver f1:driverId ?driverId ;
+                      rdfs:label ?label .
+              FILTER NOT EXISTS { ?driver f1:constructor ?constructor }
+            }
+            ORDER BY ?label
+        """),
+        "results_missing_driver_or_constructor": db.query("""
+            SELECT ?resultId ?missing WHERE {
+              {
+                ?res f1:resultId ?resultId .
+                FILTER NOT EXISTS { ?res f1:driver ?driver }
+                BIND("driver" AS ?missing)
+              }
+              UNION
+              {
+                ?res f1:resultId ?resultId .
+                FILTER NOT EXISTS { ?res f1:constructor ?constructor }
+                BIND("constructor" AS ?missing)
+              }
+            }
+            ORDER BY ?resultId ?missing
+        """),
+        "duplicate_labels": db.query("""
+            SELECT ?label (COUNT(?entity) AS ?count) WHERE {
+              ?entity rdfs:label ?label .
+            }
+            GROUP BY ?label
+            HAVING(COUNT(?entity) > 1)
+            ORDER BY DESC(?count) ?label
+        """),
+        "duplicate_ids": db.query("""
+            SELECT ?field ?idValue (COUNT(?entity) AS ?count) WHERE {
+              {
+                ?entity f1:driverId ?idValue .
+                BIND("driverId" AS ?field)
+              }
+              UNION
+              {
+                ?entity f1:constructorId ?idValue .
+                BIND("constructorId" AS ?field)
+              }
+              UNION
+              {
+                ?entity f1:raceId ?idValue .
+                BIND("raceId" AS ?field)
+              }
+              UNION
+              {
+                ?entity f1:resultId ?idValue .
+                BIND("resultId" AS ?field)
+              }
+            }
+            GROUP BY ?field ?idValue
+            HAVING(COUNT(?entity) > 1)
+            ORDER BY ?field ?idValue
+        """),
+        "dangling_uris": db.query("""
+            SELECT ?source ?predicate ?target WHERE {
+              ?source ?predicate ?target .
+              FILTER(isIRI(?target))
+              FILTER(STRSTARTS(STR(?target), "http://example.org/resource/"))
+              FILTER NOT EXISTS { ?target ?p ?o }
+            }
+            ORDER BY ?source
+            LIMIT 100
+        """),
+    }
+    return render(request, "admin/data_quality.html", {"checks": checks})
 
 
 # ── Drivers ───────────────────────────────────────────────────────────────────

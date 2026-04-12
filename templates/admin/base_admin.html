@@ -392,6 +392,21 @@
           <span class="admin-nav-icon">SSN</span> Seasons
         </a>
       </li>
+
+      <div class="admin-nav-sep"></div>
+      <li class="admin-nav-section">Operations</li>
+      <li>
+        <a href="{% url 'championship:admin_race_results_import' %}"
+           {% if 'admin_race_results_import' in request.resolver_match.url_name or 'admin_results_import_template' in request.resolver_match.url_name %}class="active"{% endif %}>
+          <span class="admin-nav-icon">IMP</span> Race Results Import
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'championship:admin_data_quality' %}"
+           {% if request.resolver_match.url_name == 'admin_data_quality' %}class="active"{% endif %}>
+          <span class="admin-nav-icon">CHK</span> Data Quality
+        </a>
+      </li>
     </ul>
     <div class="admin-logout">
       <a href="{% url 'championship:admin_logout' %}">&#8594; Sign out</a>
