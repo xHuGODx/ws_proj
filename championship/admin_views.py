@@ -98,6 +98,15 @@ def admin_dashboard(request):
 
 # ── Drivers ───────────────────────────────────────────────────────────────────
 
+def _constructor_choices(db: GraphDBClient) -> list[tuple[str, str]]:
+    rows = db.query("""
+        SELECT ?constructorId ?label WHERE {
+          ?c f1:constructorId ?constructorId ;
+             rdfs:label        ?label .
+        } ORDER BY ?label
+    """)
+    return [("", "— No team —")] + [(r["constructorId"], r["label"]) for r in rows]
+
 @login_required(login_url="championship:admin_login")
 def admin_drivers(request):
     db = GraphDBClient()
@@ -116,9 +125,9 @@ def admin_drivers(request):
 
 @login_required(login_url="championship:admin_login")
 def admin_driver_add(request):
-    form = DriverForm(request.POST or None)
+    db = GraphDBClient()
+    form = DriverForm(request.POST or None, constructor_choices=_constructor_choices(db))
     if request.method == "POST" and form.is_valid():
-        db = GraphDBClient()
         d  = form.cleaned_data
         new_id   = _next_id(db, "driverId")
         ref      = _slug(f"{d['forename']}_{d['surname']}")
@@ -138,6 +147,8 @@ def admin_driver_add(request):
             triples.append(f'f1:dob "{d["dob"]}"^^xsd:date')
         if d.get("nationality"):
             triples.append(f'f1:nationality "{_sq(d["nationality"])}"')
+        if d.get("constructor_id"):
+            triples.append(f'f1:constructor {_uri("constructor", d["constructor_id"])}')
         if d.get("url"):
             triples.append(f'rdfs:seeAlso <{d["url"]}>')
 
@@ -156,7 +167,7 @@ def admin_driver_edit(request, driver_id: str):
 
     # Load existing values
     rows = db.query(f"""
-        SELECT ?forename ?surname ?code ?number ?dob ?nationality ?url WHERE {{
+        SELECT ?forename ?surname ?code ?number ?dob ?nationality ?constructorId ?url WHERE {{
           {uri} f1:driverId ?anyId .
           OPTIONAL {{ {uri} f1:forename   ?forename   }}
           OPTIONAL {{ {uri} f1:surname    ?surname    }}
@@ -164,6 +175,8 @@ def admin_driver_edit(request, driver_id: str):
           OPTIONAL {{ {uri} f1:number     ?number     }}
           OPTIONAL {{ {uri} f1:dob        ?dob        }}
           OPTIONAL {{ {uri} f1:nationality ?nationality }}
+          OPTIONAL {{ {uri} f1:constructor ?constructor .
+                      ?constructor f1:constructorId ?constructorId }}
           OPTIONAL {{ {uri} rdfs:seeAlso  ?url        }}
         }} LIMIT 1
     """)
@@ -175,6 +188,7 @@ def admin_driver_edit(request, driver_id: str):
     initial = {
         "forename":    existing.get("forename", ""),
         "surname":     existing.get("surname",  ""),
+        "constructor_id": existing.get("constructorId", ""),
         "code":        existing.get("code",     ""),
         "number":      existing.get("number",   ""),
         "dob":         existing.get("dob",      ""),
@@ -182,7 +196,7 @@ def admin_driver_edit(request, driver_id: str):
         "url":         existing.get("url",      ""),
     }
 
-    form = DriverForm(request.POST or initial)
+    form = DriverForm(request.POST or initial, constructor_choices=_constructor_choices(db))
 
     if request.method == "POST" and form.is_valid():
         d     = form.cleaned_data
@@ -202,6 +216,8 @@ def admin_driver_edit(request, driver_id: str):
             triples.append(f'f1:dob "{d["dob"]}"^^xsd:date')
         if d.get("nationality"):
             triples.append(f'f1:nationality "{_sq(d["nationality"])}"')
+        if d.get("constructor_id"):
+            triples.append(f'f1:constructor {_uri("constructor", d["constructor_id"])}')
         if d.get("url"):
             triples.append(f'rdfs:seeAlso <{d["url"]}>')
 

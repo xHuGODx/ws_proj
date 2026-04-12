@@ -33,6 +33,19 @@
         {% for e in form.surname.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
       </div>
 
+      <div class="field-group field-full">
+        <label for="id_constructor_id">{{ form.constructor_id.label }}</label>
+        <select id="id_constructor_id" name="constructor_id">
+          {% for val, label in form.constructor_id.field.choices %}
+          <option value="{{ val }}"
+            {% if form.constructor_id.value == val|stringformat:"s" %}selected{% endif %}>
+            {{ label }}
+          </option>
+          {% endfor %}
+        </select>
+        {% for e in form.constructor_id.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
       <div class="field-group">
         <label for="id_code">{{ form.code.label }}</label>
         <input id="id_code" type="text" name="code" maxlength="3"

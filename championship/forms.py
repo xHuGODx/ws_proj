@@ -11,6 +11,7 @@ class LoginForm(forms.Form):
 class DriverForm(forms.Form):
     forename    = forms.CharField(max_length=100, label="First name")
     surname     = forms.CharField(max_length=100, label="Last name")
+    constructor_id = forms.ChoiceField(choices=[], label="Team", required=False)
     code        = forms.CharField(max_length=3,   label="Code (3 letters)", required=False)
     number      = forms.IntegerField(required=False, label="Permanent number")
     dob         = forms.DateField(
@@ -19,6 +20,11 @@ class DriverForm(forms.Form):
     )
     nationality = forms.CharField(max_length=60, required=False)
     url         = forms.URLField(required=False,  label="Wikipedia URL")
+
+    def __init__(self, *args, constructor_choices=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if constructor_choices is not None:
+            self.fields["constructor_id"].choices = constructor_choices
 
 
 class ConstructorForm(forms.Form):
