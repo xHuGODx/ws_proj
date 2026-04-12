@@ -4,7 +4,9 @@ from datetime import date
 
 from django.shortcuts import render
 
+from .forms import LLMAssistantForm
 from .services.graphdb import GraphDBClient
+from .services.llm_assistant import LLMAssistantError, answer_question
 
 _COMING_SOON = "championship/coming_soon.html"
 RESOURCE_BASE = "http://example.org/resource/"
@@ -98,6 +100,25 @@ def home(request):
     return render(request, "championship/home.html", {
         "graphdb": db.healthcheck(),
         "stats":   stats,
+    })
+
+
+def llm_assistant(request):
+    form = LLMAssistantForm(request.POST or None)
+    answer = ""
+    error = ""
+
+    if request.method == "POST" and form.is_valid():
+        try:
+            result = answer_question(form.cleaned_data["question"])
+            answer = str(result["answer"])
+        except LLMAssistantError as exc:
+            error = str(exc)
+
+    return render(request, "championship/llm_assistant.html", {
+        "form": form,
+        "answer": answer,
+        "error": error,
     })
 
 

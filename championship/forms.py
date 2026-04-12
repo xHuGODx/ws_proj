@@ -8,6 +8,14 @@ class LoginForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput)
 
 
+class LLMAssistantForm(forms.Form):
+    question = forms.CharField(
+        label="Question",
+        widget=forms.Textarea(attrs={"rows": 5, "placeholder": "Who won the 2008 Australian Grand Prix?"}),
+        max_length=1000,
+    )
+
+
 class DriverForm(forms.Form):
     forename    = forms.CharField(max_length=100, label="First name")
     surname     = forms.CharField(max_length=100, label="Last name")

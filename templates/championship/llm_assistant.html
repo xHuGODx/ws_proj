@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}LLM Assistant{% endblock %}
+
+{% block content %}
+<main>
+  <div style="max-width:900px;margin:0 auto;">
+    <section style="background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--red);border-radius:8px;padding:2rem 2.2rem;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.78rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--red);margin-bottom:0.75rem;">
+        Formula 1 Graph Copilot
+      </div>
+      <h1 class="page-title" style="margin-bottom:0.35rem;">LLM Assistant</h1>
+      <p class="page-subtitle" style="max-width:46rem;margin-bottom:1.4rem;">
+        Ask a Formula 1 question in natural language. The assistant generates a SPARQL query behind the scenes, runs it against the knowledge graph, and answers from the returned rows.
+      </p>
+
+      <form method="post">
+        {% csrf_token %}
+        <div style="display:flex;flex-direction:column;gap:0.5rem;">
+          <label for="id_question" style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.76rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--grey);">
+            Your Question
+          </label>
+          <textarea id="id_question" name="question" rows="5" maxlength="1000"
+                    style="width:100%;padding:0.9rem 1rem;border:1px solid var(--line);border-radius:6px;background:var(--dark);color:var(--white);font-family:'Barlow',sans-serif;font-size:0.95rem;resize:vertical;"
+                    placeholder="Who won the 2008 Australian Grand Prix?">{{ form.question.value|default:'' }}</textarea>
+          {% for e in form.question.errors %}<div style="color:#fca5a5;font-size:0.85rem;">{{ e }}</div>{% endfor %}
+        </div>
+
+        <div style="display:flex;gap:0.75rem;align-items:center;margin-top:1rem;flex-wrap:wrap;">
+          <button type="submit" class="btn btn-primary">Ask Assistant</button>
+          <span style="color:var(--grey);font-size:0.88rem;">SPARQL is executed server-side and is not shown in the UI.</span>
+        </div>
+      </form>
+    </section>
+
+    {% if error %}
+    <section style="background:rgba(225,6,0,0.1);border:1px solid rgba(225,6,0,0.45);border-radius:8px;padding:1rem 1.2rem;margin-top:1rem;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:0.75rem;letter-spacing:0.14em;text-transform:uppercase;color:#fca5a5;margin-bottom:0.35rem;">
+        Request Failed
+      </div>
+      <div style="color:#fca5a5;font-size:0.94rem;">{{ error }}</div>
+    </section>
+    {% endif %}
+
+    {% if answer %}
+    <section style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1.5rem 1.7rem;margin-top:1rem;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:0.75rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--grey);margin-bottom:0.55rem;">
+        Answer
+      </div>
+      <div style="color:var(--white);font-size:1rem;line-height:1.65;white-space:pre-wrap;">{{ answer }}</div>
+    </section>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}
