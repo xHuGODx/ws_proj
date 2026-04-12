@@ -1,0 +1,1082 @@
+\documentclass[12pt,a4paper]{article}
+
+% ── Packages ──────────────────────────────────────────────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{parskip}
+\usepackage{microtype}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{mdframed}
+
+% ── Page geometry ─────────────────────────────────────────────────────────────
+\geometry{
+  top=2.5cm, bottom=2.5cm,
+  left=2.5cm, right=2.5cm,
+  headheight=15pt
+}
+
+% ── Colours ───────────────────────────────────────────────────────────────────
+\definecolor{f1red}{HTML}{E10600}
+\definecolor{codebg}{HTML}{1F1F27}
+\definecolor{codetext}{HTML}{E8E8F0}
+\definecolor{codekw}{HTML}{FF7B72}
+\definecolor{codestr}{HTML}{A5D6FF}
+\definecolor{codecomment}{HTML}{8B949E}
+\definecolor{codenumber}{HTML}{79C0FF}
+\definecolor{lightgray}{HTML}{F5F5F5}
+\definecolor{darkgray}{HTML}{555555}
+
+% ── Hyperref setup ────────────────────────────────────────────────────────────
+\hypersetup{
+  colorlinks=true,
+  linkcolor=darkgray,
+  urlcolor=darkgray,
+  citecolor=darkgray,
+  pdftitle={F1 Knowledge Graph Explorer -- 1stWeb Semantics Report},
+  pdfauthor={Rodrigo Abreu},
+}
+
+% ── Section styling ───────────────────────────────────────────────────────────
+\titleformat{\section}
+  {\large\bfseries}
+  {\thesection.}{0.6em}{}
+  [\vspace{-0.4em}\color{darkgray}\rule{\linewidth}{1.5pt}]
+
+\titleformat{\subsection}
+  {\normalsize\bfseries\color{darkgray}}
+  {\thesubsection.}{0.5em}{}
+
+\titleformat{\subsubsection}
+  {\normalsize\itshape\color{darkgray}}
+  {\thesubsubsection.}{0.5em}{}
+
+% ── SPARQL listing style ──────────────────────────────────────────────────────
+\lstdefinelanguage{SPARQL}{
+  morekeywords={PREFIX,SELECT,WHERE,OPTIONAL,FILTER,GROUP,BY,ORDER,LIMIT,
+                OFFSET,DISTINCT,COUNT,MIN,MAX,SUM,SAMPLE,INSERT,DELETE,DATA,
+                ASC,DESC,UNION,BOUND,STR,CONTAINS,STRSTARTS,IF,IN,AS,FROM,
+                GRAPH,CONSTRUCT,ASK,DESCRIBE,HAVING,VALUES,BIND,NOT,EXISTS},
+  sensitive=true,
+  morestring=[b]",
+  morestring=[b]',
+  morecomment=[l]{\#},
+}
+
+\lstdefinestyle{sparql}{
+  language=SPARQL,
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\footnotesize\color{codetext},
+  keywordstyle=\color{codekw}\bfseries,
+  stringstyle=\color{codestr},
+  commentstyle=\color{codecomment}\itshape,
+  numberstyle=\tiny\color{codenumber},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=2,
+  showstringspaces=false,
+  frame=single,
+  framesep=6pt,
+  framerule=0pt,
+  rulecolor=\color{codebg},
+  xleftmargin=6pt,
+  xrightmargin=6pt,
+  captionpos=b,
+}
+
+\lstdefinestyle{shell}{
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\footnotesize\color{codetext},
+  breaklines=true,
+  frame=single,
+  framesep=6pt,
+  framerule=0pt,
+  rulecolor=\color{codebg},
+  xleftmargin=6pt,
+  xrightmargin=6pt,
+}
+
+\lstdefinestyle{python}{
+  language=Python,
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\footnotesize\color{codetext},
+  keywordstyle=\color{codekw}\bfseries,
+  stringstyle=\color{codestr},
+  commentstyle=\color{codecomment}\itshape,
+  breaklines=true,
+  frame=single,
+  framesep=6pt,
+  framerule=0pt,
+  rulecolor=\color{codebg},
+  xleftmargin=6pt,
+  xrightmargin=6pt,
+  captionpos=b,
+}
+
+% ── Header / Footer ───────────────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{darkgray} F1 Knowledge Graph Explorer}
+\fancyhead[R]{\small\color{darkgray} Web Semantics}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+\renewcommand{\headrule}{\color{darkgray}\rule{\linewidth}{0.4pt}}
+
+% ── Info box ──────────────────────────────────────────────────────────────────
+\newmdenv[
+  backgroundcolor=lightgray,
+  linecolor=f1red,
+  linewidth=3pt,
+  leftline=true, rightline=false, topline=false, bottomline=false,
+  innerleftmargin=10pt,
+  innertopmargin=8pt,
+  innerbottommargin=8pt,
+]{infobox}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{document}
+% ─────────────────────────────────────────────────────────────────────────────
+
+% ── Title page ────────────────────────────────────────────────────────────────
+\begin{titlepage}
+  \centering
+  \vspace*{1.5cm}
+
+  {\fontsize{48}{52}\selectfont\bfseries\color{f1red} F\textcolor{black}{1}}\\[0.4cm]
+  {\Large\bfseries Knowledge Graph Explorer}\\[0.3cm]
+  {\large\color{darkgray} Web Semantics --- Practical Assignment Report}
+
+  \vspace{1.5cm}
+  \color{darkgray}\rule{0.4\linewidth}{2pt}\\[0.1cm]
+  \color{darkgray}\rule{\linewidth}{0.4pt}
+  \vspace{1cm}
+
+  \begin{tabular}{rl}
+    \textbf{Author}      & Rodrigo Abreu (113626), Hugo Ribeiro () \\[0.3em]
+    \textbf{Course}      & Web Semantics \\[0.3em]
+    \textbf{Year}        & 2025--2026 \\[0.3em]
+    \textbf{Technology}  & Django 4 $\cdot$ GraphDB $\cdot$ SPARQL $\cdot$ RDF \\
+  \end{tabular}
+
+  \vspace{1.5cm}
+  \color{darkgray}\rule{\linewidth}{0.4pt}\\[0.1cm]
+  \color{darkgray}\rule{0.4\linewidth}{2pt}
+
+  \vfill
+  {\small\color{darkgray}\today}
+\end{titlepage}
+
+% ── Table of contents ─────────────────────────────────────────────────────────
+\tableofcontents
+\newpage
+
+% =============================================================================
+\section{Introduction}
+% =============================================================================
+
+Formula 1 is the premier class of single-seater auto racing sanctioned by the
+Fédération Internationale de l'Automobile (FIA). Since its inaugural season in
+1950, it has grown into one of the most data-rich sports in the world, with
+precise records of every driver, constructor, race result, qualifying session,
+lap time, and pit stop stored in structured datasets.
+
+This project constructs a \textbf{semantic web application} around Formula 1
+historical data covering the 1950--2024 seasons. The data is modelled as an RDF
+knowledge graph stored in \textbf{GraphDB} (a native RDF triple store with
+RDFS+ inference), exposed through a \textbf{SPARQL} query interface, and
+presented to users via a \textbf{Django} web application styled with the visual
+identity of the sport.
+
+\subsection{Objectives}
+
+\begin{itemize}[leftmargin=1.5em]
+  \item Transform flat CSV data from the Formula 1 World Championship (1950 - 2024) dataset into
+        a well-structured RDF knowledge graph using custom Python scripts.
+  \item Model the domain with a consistent namespace and predicate vocabulary
+        that enables efficient SPARQL queries over millions of triples.
+  \item Build a full-featured web UI allowing public users to explore drivers,
+        constructors, circuits, races, and seasons in detail.
+  \item Provide an authenticated admin panel allowing staff to create, update,
+        and delete core entities directly in the knowledge graph via SPARQL
+        UPDATE.
+\end{itemize}
+
+\subsection{Technology Stack}
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Layer}     & \textbf{Technology}      & \textbf{Role} \\
+\midrule
+Knowledge Store    & GraphDB 10 (Ontotext)    & RDF triple store, SPARQL endpoint \\
+Query Language     & SPARQL 1.1               & SELECT, UPDATE (INSERT/DELETE) \\
+Data Format        & N-Triples (.nt)          & RDF serialisation for bulk import \\
+Web Framework      & Django 4.x (Python)      & Views, templates, URL routing \\
+SPARQL Client      & SPARQLWrapper            & HTTP bridge to GraphDB endpoint \\
+Serialisation      & RDFLib                   & CSV $\rightarrow$ RDF conversion \\
+Auth               & Django contrib.auth      & Session-based login for admin \\
+Frontend           & Vanilla HTML/CSS/JS      & Responsive dark-theme UI \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% =============================================================================
+\section{Data, Sources, and Transformation Process}
+% =============================================================================
+
+\subsection{Data Source}
+
+The raw data originates from the \textbf{Formula 1 World Championship (1950 - 2024)}
+(\url{https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020?select=circuits.csv}), a free API and database export providing
+structured Formula 1 statistics from 1950 to the present. For this project the
+data was downloaded as a CSV export and covers the \textbf{1950--2024} seasons.
+
+The dataset consists of \textbf{13 CSV files}, each representing a distinct
+entity type or relationship:
+
+\begin{center}
+\begin{longtable}{@{}llp{6.5cm}@{}}
+\toprule
+\textbf{CSV File}              & \textbf{RDF Class}       & \textbf{Key Fields} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r}{\small continued \ldots}\\
+\endfoot
+\bottomrule
+\endlastfoot
+\texttt{seasons.csv}           & Season                   & year, url \\
+\texttt{circuits.csv}          & Circuit                  & circuitId, name, location, country, lat, lng, alt, url \\
+\texttt{constructors.csv}      & Constructor              & constructorId, name, nationality, url \\
+\texttt{drivers.csv}           & Driver                   & driverId, forename, surname, code, number, dob, nationality, url \\
+\texttt{races.csv}             & Race                     & raceId, year, round, name, date, circuitId (FK), url \\
+\texttt{results.csv}           & Result                   & resultId, raceId, driverId, constructorId, grid, positionOrder, points, laps, time, statusId, fastestLapTime, fastestLapSpeed \\
+\texttt{qualifying.csv}        & QualifyingResult         & qualifyId, raceId, driverId, constructorId, position, q1, q2, q3 \\
+\texttt{pit\_stops.csv}         & PitStop                  & raceId, driverId, stop, lap, milliseconds, duration \\
+\texttt{lap\_times.csv}         & LapTime                  & raceId, driverId, lap, position, time, milliseconds \\
+\texttt{driver\_standings.csv}  & DriverStanding           & driverStandingsId, raceId, driverId, points, position, wins \\
+\texttt{constructor\_standings.csv} & ConstructorStanding & constructorStandingsId, raceId, constructorId, points, position, wins \\
+\texttt{constructor\_results.csv}   & ConstructorResult   & constructorResultsId, raceId, constructorId, points, status \\
+\texttt{status.csv}            & Status                   & statusId, status (text label) \\
+\end{longtable}
+\end{center}
+
+\subsection{RDF Namespace and Vocabulary}
+
+A custom namespace \texttt{http://example.org/f1/} is used for all domain
+predicates, and \texttt{http://example.org/resource/} is used as the base for
+all entity URIs. Standard W3C vocabularies are used where appropriate.
+
+\begin{lstlisting}[style=sparql, caption={SPARQL namespace prefixes used throughout the application}]
+PREFIX f1:   <http://example.org/f1/>
+PREFIX res:  <http://example.org/resource/>
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+\end{lstlisting}
+
+\subsubsection{URI Construction}
+
+Entity URIs follow a consistent pattern:
+\texttt{res:\{kind\}/\{id\}}, where \texttt{kind} is a lowercase slug derived
+from the entity class and \texttt{id} is the numeric identifier from the source
+CSV.
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Entity}    & \textbf{Example URI} \\
+\midrule
+Driver             & \texttt{res:driver/1} \\
+Constructor        & \texttt{res:constructor/6} \\
+Circuit            & \texttt{res:circuit/6} \\
+Race               & \texttt{res:race/841} \\
+Result             & \texttt{res:result/1} \\
+QualifyingResult   & \texttt{res:qualifying-result/1} \\
+PitStop            & \texttt{res:pit-stop/\{raceId\}/\{driverId\}/\{stop\}} \\
+LapTime            & \texttt{res:lap-time/\{raceId\}/\{driverId\}/\{lap\}} \\
+Status             & \texttt{res:status/1} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Transformation Script}
+
+The Python script \texttt{scripts/csv\_to\_rdf.py} performs the full
+CSV-to-RDF conversion using RDFLib. The process for each CSV file is:
+
+\begin{enumerate}[leftmargin=2em]
+  \item Read each row with \texttt{csv.DictReader}.
+  \item Construct the subject URI from the configured \texttt{id\_columns}.
+  \item For each column, cast the value to the appropriate XSD datatype
+        (\texttt{xsd:integer}, \texttt{xsd:decimal}, \texttt{xsd:date},
+        \texttt{xsd:gYear}) or leave it as a plain literal.
+  \item For foreign key columns (e.g.\ \texttt{raceId}, \texttt{driverId}),
+        emit an object property triple linking to the target entity URI.
+  \item Emit a \texttt{rdfs:label} triple with a human-readable label derived
+        from available name fields.
+  \item Serialise the complete graph as \textbf{N-Triples} (\texttt{.nt}) for
+        efficient bulk import into GraphDB.
+\end{enumerate}
+
+\subsubsection{Data Type Mapping}
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Column group}      & \textbf{XSD type}     & \textbf{Example columns} \\
+\midrule
+Numeric identifiers/counts & \texttt{xsd:integer}  & driverId, raceId, laps, position \\
+Floating-point values      & \texttt{xsd:decimal}  & lat, lng, points, fastestLapSpeed \\
+Calendar dates             & \texttt{xsd:date}     & dob, date, fp1\_date \\
+Calendar years             & \texttt{xsd:gYear}    & year \\
+Time strings               & plain literal         & time, fastestLapTime, q1, q2, q3 \\
+External URLs              & \texttt{rdfs:seeAlso} & url \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsubsection{Derived Labels}
+
+Because SPARQL queries use \texttt{rdfs:label} for display, the script
+generates a label for every entity at conversion time. For drivers, the label
+is the concatenation of \texttt{forename} and \texttt{surname}. For races it
+uses the \texttt{name} column. For seasons the label is ``Season YYYY''.
+
+\subsubsection{Sprint Results Exclusion}
+
+The original dataset includes a \texttt{sprint\_results.csv} file recording
+results from Saturday sprint races. Sprint results use the same
+\texttt{resultId} sequence as regular race results and link to the same race
+entities via \texttt{f1:race}. This caused \textbf{duplicate rows} when
+querying race results: for any sprint weekend, both a \texttt{res:result/N}
+and a \texttt{res:sprint-result/N} entity would match the \texttt{f1:resultId}
+anchor, effectively doubling every driver's entry in the results table.
+
+Sprint results were therefore excluded from the conversion script. A SPARQL
+\texttt{FILTER} guard is also applied in the race detail query as a defensive
+measure for any existing data in the store:
+
+\begin{lstlisting}[style=sparql, caption={Filter excluding sprint-result URIs from race result queries}]
+FILTER(!CONTAINS(STR(?res), "/sprint-result/"))
+\end{lstlisting}
+
+\subsection{Loading into GraphDB}
+
+The generated \texttt{.nt} file is loaded into GraphDB using the \textbf{Import
+$\rightarrow$ Upload RDF files} interface in the GraphDB Workbench, targeting
+the named graph \texttt{http://example.org/graph/formula1}. The repository is
+configured with \textbf{RDFS+ (Optimized)} inference enabled, which allows
+entailments over \texttt{rdfs:subClassOf} and \texttt{rdfs:subPropertyOf}
+chains.
+
+% =============================================================================
+\section{Operations on the Data (SPARQL Queries)}
+% =============================================================================
+
+All SPARQL queries are executed via the \texttt{GraphDBClient} class in
+\texttt{championship/services/graphdb.py}, which prepends the five namespace
+prefixes to every query. The client exposes two methods:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{query(sparql)} --- executes a SELECT and returns a list of
+        dictionaries mapping variable names to string values.
+  \item \texttt{run\_update(sparql)} --- executes a SPARQL UPDATE (INSERT or
+        DELETE) against the \texttt{/statements} endpoint.
+\end{itemize}
+
+\subsection{Anchoring Strategy}
+
+A central design decision is the use of \textbf{property anchors} rather than
+\texttt{rdf:type} assertions for entity discovery. GraphDB's RDFS+ inference
+engine processes \texttt{rdf:type} through the class hierarchy, which is
+expensive on large graphs. Instead, every query starts with a property that is
+unique to the target entity class:
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Entity}    & \textbf{Anchor predicate} \\
+\midrule
+Driver             & \texttt{f1:driverId} \\
+Constructor        & \texttt{f1:constructorId} \\
+Circuit            & \texttt{f1:circuitRef} (not \texttt{f1:circuitId} --- races also carry this) \\
+Race               & \texttt{f1:round} \\
+Result             & \texttt{f1:resultId} \\
+QualifyingResult   & \texttt{f1:qualifyId} \\
+PitStop            & \texttt{f1:stop} \\
+LapTime            & \texttt{f1:position} (lap\_times only; pit\_stops do not have this) \\
+DriverStanding     & \texttt{f1:driverStandingsId} \\
+ConstructorStanding & \texttt{f1:constructorStandingsId} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Year Filtering}
+
+Race years are stored as \texttt{xsd:gYear}. Direct numeric comparison
+(\texttt{FILTER(?year = 2024)}) fails because the literal type does not match
+\texttt{xsd:integer}. All season-scoped queries therefore coerce to string:
+
+\begin{lstlisting}[style=sparql]
+FILTER(STR(?yr) = "2024")
+\end{lstlisting}
+
+\subsection{Read Queries (SELECT)}
+
+\subsubsection{Homepage Statistics}
+
+The home page displays live aggregate counts queried directly from the graph,
+ensuring they always reflect the current state of the knowledge base.
+
+\begin{lstlisting}[style=sparql, caption={Aggregate entity counts for the homepage}]
+SELECT
+  (COUNT(DISTINCT ?season)      AS ?seasons)
+  (COUNT(DISTINCT ?circuit)     AS ?circuits)
+  (COUNT(DISTINCT ?driver)      AS ?drivers)
+  (COUNT(DISTINCT ?constructor) AS ?constructors)
+  (COUNT(DISTINCT ?race)        AS ?races)
+WHERE {
+  ?race     f1:round       ?round ;
+            f1:year        ?season ;
+            f1:circuit     ?circuit .
+  ?res      f1:resultId    ?anyId ;
+            f1:race        ?race ;
+            f1:driver      ?driver ;
+            f1:constructor ?constructor .
+}
+\end{lstlisting}
+
+\subsubsection{Driver List with Career Statistics}
+
+Three queries are executed in sequence to build the drivers list page: one for
+basic fields, one for career year ranges, and one for podium breakdowns.
+
+\begin{lstlisting}[style=sparql, caption={Career year range per driver (MIN/MAX over race years)}]
+SELECT ?driver
+       (COUNT(*) AS ?races)
+       (MIN(STR(?yr)) AS ?firstYear)
+       (MAX(STR(?yr)) AS ?lastYear)
+WHERE {
+  ?r f1:resultId ?anyId ;
+     f1:driver   ?driver ;
+     f1:race     ?race .
+  ?race f1:year ?yr .
+}
+GROUP BY ?driver
+\end{lstlisting}
+
+\begin{lstlisting}[style=sparql, caption={Podium breakdown (positions 1, 2, 3) per driver}]
+SELECT ?driver ?pos (COUNT(*) AS ?cnt) WHERE {
+  ?r f1:resultId    ?anyId ;
+     f1:driver      ?driver ;
+     f1:positionOrder ?pos .
+  FILTER(?pos IN (1, 2, 3))
+}
+GROUP BY ?driver ?pos
+\end{lstlisting}
+
+\subsubsection{Constructor Detail --- Driver Roster}
+
+This query uses conditional aggregation (\texttt{SUM(IF(\ldots))}) to compute
+per-driver wins and podiums without leaving the SPARQL layer.
+
+\begin{lstlisting}[style=sparql, caption={Driver roster with win and podium counts for a constructor}]
+SELECT ?driver ?driverLabel
+       (COUNT(*) AS ?races)
+       (SUM(IF(?pos = 1, 1, 0))         AS ?wins)
+       (SUM(IF(?pos IN (1,2,3), 1, 0))  AS ?podiums)
+       (MIN(?year) AS ?firstYear)
+       (MAX(?year) AS ?lastYear)
+WHERE {
+  ?r f1:resultId    ?anyId ;
+     f1:constructor <{constructorUri}> ;
+     f1:driver      ?driver ;
+     f1:positionOrder ?pos ;
+     f1:race        ?race .
+  ?race   f1:year    ?year .
+  ?driver rdfs:label ?driverLabel .
+}
+GROUP BY ?driver ?driverLabel
+ORDER BY DESC(?wins) DESC(?races)
+\end{lstlisting}
+
+\subsubsection{Race Detail --- Results with Finish Status}
+
+Results for a race are retrieved in a single query. The finish status (e.g.\
+``Finished'', ``Engine'', ``Collision'') is joined via \texttt{f1:statusId}
+linking results to status entities. Both joins are wrapped in \texttt{OPTIONAL}
+so drivers without a recorded status still appear.
+
+\begin{lstlisting}[style=sparql, caption={Race results with finish status join}]
+SELECT ?positionOrder ?grid ?laps ?time ?points ?statusText
+       ?driverLabel ?driverId ?constructorLabel WHERE {
+  ?res f1:resultId     ?anyId ;
+       f1:race         <{raceUri}> ;
+       f1:positionOrder ?positionOrder ;
+       f1:driver        ?driver ;
+       f1:constructor   ?constructor .
+  FILTER(!CONTAINS(STR(?res), "/sprint-result/"))
+  OPTIONAL { ?res f1:grid   ?grid   }
+  OPTIONAL { ?res f1:laps   ?laps   }
+  OPTIONAL { ?res f1:time   ?time   }
+  OPTIONAL { ?res f1:points ?points }
+  OPTIONAL {
+    ?res       f1:statusId ?statusId .
+    ?statusEnt f1:statusId ?statusId ;
+               f1:status   ?statusText .
+    FILTER(!CONTAINS(STR(?statusEnt), "/result/"))
+  }
+  ?driver      rdfs:label ?driverLabel ;
+               f1:driverId ?driverId .
+  ?constructor rdfs:label ?constructorLabel .
+}
+ORDER BY ?positionOrder
+\end{lstlisting}
+
+\subsubsection{Pit Stop Aggregation}
+
+Pit stop data is aggregated per driver per race. The \texttt{f1:stop} property
+serves as the anchor (unique to pit stop entities). The query computes total pit
+time, fastest single stop time, and the lap on which the fastest stop occurred.
+
+\begin{lstlisting}[style=sparql, caption={Per-driver pit stop aggregation for a race}]
+SELECT ?driverLabel ?driverId
+       (COUNT(*)         AS ?stops)
+       (SUM(?ms)         AS ?totalMs)
+       (MIN(?ms)         AS ?fastestMs)
+       (SAMPLE(?fastestLap) AS ?fastestLap)
+WHERE {
+  ?ps f1:stop         ?stop ;
+      f1:race         <{raceUri}> ;
+      f1:driver       ?driver ;
+      f1:milliseconds ?ms ;
+      f1:lap          ?fastestLap .
+  ?driver rdfs:label ?driverLabel ;
+          f1:driverId ?driverId .
+}
+GROUP BY ?driverLabel ?driverId
+ORDER BY ?driverLabel
+\end{lstlisting}
+
+\subsubsection{Season Detail --- Championship Standings}
+
+Standings are stored per-race (cumulative totals after each round). To obtain
+\emph{final} standings for a season, the query orders by round descending and
+the application keeps only the first occurrence per driver/constructor.
+
+\begin{lstlisting}[style=sparql, caption={Driver championship standings for a season (final round)}]
+SELECT ?driverLabel ?driverId
+       ?points ?position ?wins ?round WHERE {
+  ?ds f1:driverStandingsId ?anyId ;
+      f1:race     ?race ;
+      f1:driver   ?driver ;
+      f1:points   ?points ;
+      f1:position ?position ;
+      f1:wins     ?wins .
+  ?race f1:year  ?yr ;
+        f1:round ?round .
+  FILTER(STR(?yr) = "{year}")
+  ?driver rdfs:label ?driverLabel ;
+          f1:driverId ?driverId .
+}
+ORDER BY DESC(?round) ?position
+\end{lstlisting}
+
+\subsubsection{Circuit Fastest Lap}
+
+Lap time entities carry a \texttt{f1:position} property (finishing position
+within that lap). Position~1 identifies the fastest lap in each lap. However,
+since the circuit detail page seeks the all-time fastest lap recorded at that
+circuit across all races, the query retrieves the minimum milliseconds value.
+
+\begin{lstlisting}[style=sparql, caption={Fastest laps ever recorded at a circuit}]
+SELECT ?driverLabel ?driverId ?time ?ms ?year WHERE {
+  ?race f1:circuit <{circuitUri}> ;
+        f1:year     ?year .
+  ?lt   f1:race         ?race ;
+        f1:driver       ?driver ;
+        f1:milliseconds ?ms ;
+        f1:time         ?time ;
+        f1:lap          ?lap ;
+        f1:position     ?pos .
+  ?driver rdfs:label ?driverLabel ;
+          f1:driverId ?driverId .
+  FILTER(?ms > 60000)
+}
+ORDER BY ASC(?ms)
+LIMIT 5
+\end{lstlisting}
+
+\subsection{Write Operations (SPARQL UPDATE)}
+
+The admin panel performs SPARQL UPDATE queries via the
+\texttt{/statements} endpoint. All mutations are expressed using standard
+SPARQL 1.1 UPDATE syntax.
+
+\subsubsection{Entity Creation (INSERT DATA)}
+
+New entities are created with a single \texttt{INSERT DATA} block. Before
+inserting, a helper query computes the next available ID by finding the current
+maximum for the target class:
+
+\begin{lstlisting}[style=sparql, caption={Maximum ID query for sequential ID generation (shown for drivers; analogous for all entity types)}]
+SELECT (MAX(?id) AS ?maxId) WHERE {
+  ?e f1:driverId ?id .
+}
+\end{lstlisting}
+
+The same pattern is applied for \texttt{f1:constructorId}, \texttt{f1:circuitId},
+\texttt{f1:raceId}, etc.\ Each entity type has a well-defined set of required
+and optional predicates:
+
+\begin{lstlisting}[style=sparql, caption={INSERT DATA for a new driver with all fields}]
+INSERT DATA {
+  <http://example.org/resource/driver/862>
+    rdfs:label     "George Russell" ;
+    f1:driverId    862 ;
+    f1:driverRef   "russell" ;
+    f1:forename    "George" ;
+    f1:surname     "Russell" ;
+    f1:code        "RUS" ;
+    f1:number      63 ;
+    f1:dob         "1998-02-15"^^xsd:date ;
+    f1:nationality "British" ;
+    rdfs:seeAlso   <https://en.wikipedia.org/wiki/George_Russell> .
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=sparql, caption={INSERT DATA for a new constructor}]
+INSERT DATA {
+  <http://example.org/resource/constructor/212>
+    rdfs:label        "Aston Martin" ;
+    f1:constructorId  212 ;
+    f1:constructorRef "aston_martin" ;
+    f1:name           "Aston Martin" ;
+    f1:nationality    "British" ;
+    rdfs:seeAlso      <https://en.wikipedia.org/wiki/Aston_Martin_in_Formula_One> .
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=sparql, caption={INSERT DATA for a new circuit}]
+INSERT DATA {
+  <http://example.org/resource/circuit/78>
+    rdfs:label    "Las Vegas Street Circuit" ;
+    f1:circuitId  78 ;
+    f1:circuitRef "las_vegas" ;
+    f1:name       "Las Vegas Street Circuit" ;
+    f1:location   "Las Vegas" ;
+    f1:country    "USA" ;
+    f1:lat        36.1699 ;
+    f1:lng        -115.1398 ;
+    rdfs:seeAlso  <https://en.wikipedia.org/wiki/Las_Vegas_Grand_Prix> .
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=sparql, caption={INSERT DATA for a new race, linking to an existing circuit}]
+INSERT DATA {
+  <http://example.org/resource/race/1126>
+    rdfs:label  "Las Vegas Grand Prix" ;
+    f1:raceId   1126 ;
+    f1:name     "Las Vegas Grand Prix" ;
+    f1:year     "2025"^^xsd:gYear ;
+    f1:round    22 ;
+    f1:circuit  <http://example.org/resource/circuit/78> ;
+    f1:date     "2025-11-22"^^xsd:date ;
+    rdfs:seeAlso <https://en.wikipedia.org/wiki/2025_Las_Vegas_Grand_Prix> .
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=sparql, caption={INSERT DATA for a new season}]
+INSERT DATA {
+  <http://example.org/resource/season/2025>
+    f1:seasonYear "2025"^^xsd:gYear ;
+    rdfs:label    "Season 2025" ;
+    rdfs:seeAlso  <https://en.wikipedia.org/wiki/2025_Formula_One_World_Championship> .
+}
+\end{lstlisting}
+
+\subsubsection{Entity Update (DELETE + INSERT)}
+
+Updating an entity requires removing all its current triples first, then
+reinserting the complete set of new values. Both operations are sent in a
+single SPARQL UPDATE request, separated by a semicolon, which provides
+pseudo-atomic semantics:
+
+\begin{lstlisting}[style=sparql, caption={DELETE + INSERT pattern for entity updates (identical structure for all entity types)}]
+DELETE WHERE {
+  <http://example.org/resource/driver/862> ?p ?o
+} ;
+INSERT DATA {
+  <http://example.org/resource/driver/862>
+    rdfs:label     "George Russell" ;
+    f1:driverId    862 ;
+    f1:nationality "British" ;
+    f1:number      63 ;
+    ... .
+}
+\end{lstlisting}
+
+This pattern is identical for all five entity types (drivers, constructors,
+circuits, races, seasons). The only difference is the subject URI prefix and
+the set of predicates emitted. Because the DELETE removes \emph{all} predicates
+before the INSERT, optional fields that were previously set and are now absent
+(e.g.\ a driver code that was cleared) are cleanly removed from the graph.
+
+\subsubsection{Entity Deletion (DELETE WHERE)}
+
+Deleting an entity removes all triples where the entity appears as the subject:
+
+\begin{lstlisting}[style=sparql, caption={DELETE WHERE for entity removal}]
+DELETE WHERE {
+  <http://example.org/resource/driver/862> ?p ?o .
+}
+\end{lstlisting}
+
+The same one-liner applies to constructors, circuits, races, and seasons,
+only the URI changes. The admin panel adds a confirmation modal before
+dispatching the DELETE to guard against accidental deletions.
+
+\begin{infobox}
+\textbf{Note on derived data:} Metrics such as race wins, podium counts, and
+championship points are \emph{derived} by aggregating race result triples at
+query time. They are never stored directly and therefore do not need to be
+maintained through UPDATE operations. Deleting a driver removes only the driver
+entity; the result triples that reference it are preserved, though they become
+orphaned references.
+\end{infobox}
+
+% =============================================================================
+\section{Application Functionalities (UI)}
+% =============================================================================
+
+The application is built with Django, rendering server-side HTML templates
+and communicating with GraphDB over HTTP. There is no JavaScript framework; all
+interactivity is achieved with vanilla JS and CSS custom properties.
+
+\subsection{Public Interface}
+
+\subsubsection{Homepage}
+
+The homepage presents an overview of the knowledge graph with five live stat
+tiles (seasons, circuits, drivers, constructors, races) fetched via a single
+aggregation query. Below the stats, five navigation cards link to the main
+entity sections. A connectivity indicator in the footer shows whether the
+GraphDB endpoint is reachable. The page applies a dark motorsport aesthetic
+with the F1 red accent colour throughout.
+
+\subsubsection{Drivers Section}
+
+The drivers list page provides:
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Podium display} --- the top three all-time wins leaders shown as
+        styled cards with photo slots for featured drivers.
+  \item \textbf{Filterable table} --- server-side filtering by name, nationality,
+        and medal type (gold/silver/bronze podiums).
+  \item \textbf{Sortable columns} --- clicking any column header re-queries the
+        server with the chosen sort dimension.
+  \item \textbf{Cards / table toggle} --- client-side view switch persisted in
+        \texttt{localStorage}.
+  \item \textbf{Career span} --- each driver shows their first and last active
+        season (e.g.\ ``2007--2016'').
+\end{itemize}
+
+The driver detail page shows biographical info, career statistics (races, wins,
+podiums, championships), a horizontal constructor timeline, top circuits, and a
+table of the driver's best results.
+
+\subsubsection{Constructors Section}
+
+The constructors list page mirrors the drivers page in structure, providing a
+top-three wins podium (with logo image slots for prominent teams), a
+nationality filter, server-side column sorting, and a card/table view toggle.
+Each card displays the team's nationality, estimated founding year, total race
+count, and win tally.
+
+The constructor detail page is divided into four areas:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Hero section} --- team name, nationality, and Wikipedia link.
+  \item \textbf{Stat tiles} --- total races entered, total wins, total podiums,
+        and the number of distinct drivers who raced for the team.
+  \item \textbf{Driver roster table} --- every driver who competed for the
+        constructor, with their first and last season, race count, wins, and
+        podium count. Rows are sorted by wins descending. These figures are
+        computed entirely in SPARQL using \texttt{SUM(IF(\ldots))} conditional
+        aggregation; no post-processing is required.
+  \item \textbf{Top circuits} --- the six circuits where the constructor has
+        entered the most races, shown as labelled chips. Useful for identifying
+        home-track advantages or high-frequency venues.
+\end{itemize}
+
+\subsubsection{Circuits Section}
+
+The circuits list page features a podium of the three circuits that have hosted
+the most Grands Prix, each with an image slot for iconic venues (Monaco,
+Monza, Silverstone). Below the podium, a card/table grid lists all circuits
+with their country, location, and race count badge. Retired circuits are
+visually distinguished with a ``Retired'' status chip.
+
+The circuit detail page provides:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Hero section} --- circuit name, location, country, and
+        geographic coordinates (latitude, longitude, altitude).
+  \item \textbf{Stat tiles} --- total races hosted, first and last year of use.
+  \item \textbf{Race history table} --- all races held at the circuit listed
+        in reverse chronological order, showing year, race name, race winner,
+        and winning constructor. Data is fetched with a single SPARQL query
+        using \texttt{OPTIONAL} to gracefully handle historic races with missing
+        result data.
+  \item \textbf{Fastest laps} --- the five all-time fastest individual laps
+        recorded at the circuit, sourced from the lap times data
+        (filtered to lap duration $> 60{,}000$\,ms to exclude incomplete
+        laps) and ordered by ascending milliseconds.
+\end{itemize}
+
+\subsubsection{Races Section}
+
+The races list shows a featured card for the most recent race with full podium
+display, followed by a filterable list of all races. The race detail page
+features:
+\begin{itemize}[leftmargin=1.5em]
+  \item Hero section with circuit, country, date, and round.
+  \item Stat tiles: starters, race laps, fastest lap time and driver.
+  \item Podium display (top~3 finishers).
+  \item Full results table with grid position, laps completed, race time/gap,
+        \textbf{finish status} (e.g.\ ``+1 Lap'', ``Engine'', ``Collision''), and points.
+  \item \textbf{Pit stop section} showing per-driver stop count, total pit time,
+        and fastest individual stop.
+  \item Qualifying results with Q1/Q2/Q3 times.
+\end{itemize}
+
+\subsubsection{Seasons Section}
+
+The seasons list page renders one card per season sorted most-recent first.
+Each card shows the year prominently, race count, driver count, team count, and
+the driver with the most race wins that year. Client-side search and sort
+(by year or race count) operate over the rendered cards and a mirrored hidden
+table without any server round-trips. The view defaults to cards rather than
+table, reflecting the browsing-first use case for seasons.
+
+The season detail page is the richest summary page in the application:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Race calendar table} --- every round of the season with round
+        number, race name, circuit, country, date, and race winner with their
+        constructor. The winner is derived in SPARQL using
+        \texttt{OPTIONAL \{ ?res f1:positionOrder 1 \}} so rounds with no
+        result data (e.g.\ future races) are still listed.
+  \item \textbf{Driver championship standings} --- final standings showing
+        position, driver name, total points, and wins. Because the
+        \texttt{driver\_standings} table stores cumulative snapshots after
+        every round, the query orders by round descending and Python retains
+        only the first (latest) row per driver, yielding the end-of-season
+        standings efficiently.
+  \item \textbf{Constructor championship standings} --- same approach applied
+        to \texttt{constructor\_standings}, showing team, points, and wins.
+\end{itemize}
+
+\subsection{Admin Panel}
+
+The admin panel is accessible at \texttt{/admin-panel/} and requires login with
+a Django staff account. It features:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Login page} --- standalone page with the site aesthetic, staff-only.
+  \item \textbf{Dashboard} --- live entity counts with quick-add shortcuts.
+  \item \textbf{Entity management} for Drivers, Constructors, Circuits, Races,
+        and Seasons: list view with inline Edit / Delete actions and Add form.
+  \item \textbf{Confirm-delete modal} --- clicking Delete opens a modal
+        requiring confirmation before the SPARQL DELETE is executed.
+  \item \textbf{Sidebar navigation} --- sticky left nav with active state
+        highlighting the current section.
+  \item \textbf{Flash messages} --- success and error messages displayed after
+        each operation.
+\end{itemize}
+
+\subsection{Design System}
+
+The UI is built on a set of CSS custom properties (\texttt{--red},
+\texttt{--dark}, \texttt{--panel}, \texttt{--grey}, etc.) that support both
+dark and light themes. The theme is persisted in \texttt{localStorage} and
+applied before paint to avoid a flash of unstyled content. Typography uses
+\emph{Barlow Condensed} (headings) and \emph{Barlow} (body text) from Google
+Fonts. The colour palette mirrors the official F1 brand: red (\texttt{\#E10600})
+on a near-black background (\texttt{\#15151E}).
+
+% =============================================================================
+\section{Conclusions}
+% =============================================================================
+
+This project successfully demonstrates the end-to-end lifecycle of a semantic
+web application: from raw relational CSV data to an RDF knowledge graph, through
+SPARQL queries, to a fully functional web interface.
+
+\subsection{Key Achievements}
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Full RDF pipeline}: A Python script converts 13 CSV files into
+        a consistent N-Triples RDF graph with correct datatype annotations,
+        object property links between entities, and \texttt{rdfs:label} triples
+        for every entity.
+
+  \item \textbf{Efficient SPARQL queries}: The anchoring strategy (using unique
+        property predicates rather than \texttt{rdf:type}) proved essential for
+        acceptable query performance over a graph of millions of triples. Queries
+        that naively used \texttt{rdf:type} were orders of magnitude slower.
+
+  \item \textbf{Derived data without denormalisation}: Metrics such as wins,
+        podiums, and championship points are computed at query time using SPARQL
+        aggregation functions (\texttt{COUNT}, \texttt{SUM(IF(\ldots))},
+        \texttt{MIN}, \texttt{MAX}). This keeps the graph normalised and ensures
+        consistency.
+
+  \item \textbf{Full CRUD via SPARQL UPDATE}: The admin interface demonstrates
+        that GraphDB can serve as the single source of truth for both reads and
+        writes, with no relational database involved for domain data.
+
+  \item \textbf{Aesthetic and usability}: The application provides a polished
+        consumer-grade interface with dark/light theme switching, responsive
+        layout, card/table view toggles, client-side search and sort, and
+        accessible navigation.
+\end{itemize}
+
+\subsection{Challenges and Lessons Learned}
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{xsd:gYear comparison}: Race years stored as \texttt{xsd:gYear}
+        cannot be compared directly with integer literals; they must be
+        coerced to strings using \texttt{STR()}.
+
+  \item \textbf{Sprint results contamination}: Sprint race results shared the
+        \texttt{f1:resultId} anchor and \texttt{f1:race} link with regular
+        results, causing duplicate rows. The issue was resolved by filtering
+        on the URI pattern of the result entity, although the sprints data was 
+        excluded from the graph entirely to prevent future issues.
+
+  \item \textbf{Status join ambiguity}: Joining via \texttt{f1:statusId}
+        required care because result entities and status entities both carry this
+        property; an additional \texttt{FILTER} on the status entity URI was
+        needed to prevent cross-joins.
+
+  \item \textbf{GROUP BY and SAMPLE()}: Season calendar queries must return one
+        winner row per race when winners are represented as separate result
+        entities. \texttt{SAMPLE()} allowed grouping while retaining an
+        arbitrary winner value without requiring a subquery.
+\end{itemize}
+
+\subsection{Future Work}
+
+\begin{itemize}[leftmargin=1.5em]
+  \item Extend the admin panel to manage race results directly (changing positions,
+        points, and status for individual entries).
+  \item Implement a public SPARQL explorer endpoint, allowing power users to
+        run custom queries against the knowledge graph.
+  \item Integrate live data from the current season via the Ergast API.
+  \item Inlcude and AI that allows users to ask natural language questions about the data, translating them
+        into SPARQL queries under the hood.
+\end{itemize}
+
+% =============================================================================
+\section{Configuration Required to Run the Application}
+% =============================================================================
+
+\subsection{Prerequisites}
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Python 3.11+} with \texttt{pip}
+  \item \textbf{GraphDB 10} (free edition) running locally or remotely
+\end{itemize}
+
+\subsection{Step 1 --- Clone and Install Dependencies}
+
+\begin{lstlisting}[style=shell]
+# From the project root:
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+\end{lstlisting}
+
+\subsection{Step 2 --- Configure Environment Variables}
+
+Create a \texttt{.env} file in the project root:
+
+\begin{lstlisting}[style=shell]
+DJANGO_SECRET_KEY=your-secret-key-here
+DJANGO_DEBUG=True
+GRAPHDB_BASE_URL=http://localhost:7200
+GRAPHDB_REPOSITORY=ws-formula1
+# Optional: if GraphDB requires authentication
+# GRAPHDB_USERNAME=admin
+# GRAPHDB_PASSWORD=your-password
+\end{lstlisting}
+
+\subsection{Step 3 --- Prepare the Knowledge Graph}
+
+\begin{enumerate}[leftmargin=2em]
+  \item Place the Ergast CSV files in \texttt{data/raw/}.
+  \item Run the conversion script to generate N-Triples:
+\begin{lstlisting}[style=shell]
+python scripts/csv_to_rdf.py
+# Output: data/rdf/f1_dataset.nt
+\end{lstlisting}
+  \item Open GraphDB Workbench at \texttt{http://localhost:7200}.
+  \item Create a repository named \texttt{ws-formula1} with
+        \textbf{Ruleset: RDFS+ (Optimized)}.
+  \item Go to \textbf{Import $\rightarrow$ Upload RDF files}, select
+        \texttt{data/rdf/f1\_dataset.nt}, and import into the named graph
+        \texttt{http://example.org/graph/formula1}.
+\end{enumerate}
+
+\subsection{Step 4 --- Initialise Django and Create Admin User}
+
+\begin{lstlisting}[style=shell]
+python manage.py migrate
+python manage.py createsuperuser
+# Follow the prompts to set username and password
+\end{lstlisting}
+
+\subsection{Step 5 --- Run the Development Server}
+
+\begin{lstlisting}[style=shell]
+python manage.py runserver
+# Application available at http://127.0.0.1:8000
+# Admin panel at http://127.0.0.1:8000/admin-panel/
+\end{lstlisting}
+
+\subsection{Summary of URLs}
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{URL}                    & \textbf{Description} \\
+\midrule
+\texttt{/}                      & Homepage with live stats \\
+\texttt{/drivers/}              & Drivers list \\
+\texttt{/constructors/}         & Constructors list \\
+\texttt{/circuits/}             & Circuits list \\
+\texttt{/races/}                & Races list \\
+\texttt{/seasons/}              & Seasons list \\
+\texttt{/admin-panel/}          & Admin dashboard (login required) \\
+\texttt{/admin-panel/login/}    & Admin login page \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\end{document}
