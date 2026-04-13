@@ -245,9 +245,8 @@ LLM Integration    & Gemini API               & Natural-language to SPARQL assis
 \subsection{Data Source}
 
 The raw data originates from the \textbf{Formula 1 World Championship (1950 - 2024)}
-(\url{https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020?select=circuits.csv}), a free API and database export providing
-structured Formula 1 statistics from 1950 to the present. For this project the
-data was downloaded as a CSV export and covers the \textbf{1950--2024} seasons.
+(\url{https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020?select=circuits.csv}), which contains
+structured Formula 1 statistics from 1950 to 2024, that can be downloaded as csv files. 
 
 The dataset consists of \textbf{13 CSV files}, each representing a distinct
 entity type or relationship:
@@ -920,13 +919,15 @@ The season detail page is the richest summary page in the application:
         to \texttt{constructor\_standings}, showing team, points, and wins.
 \end{itemize}
 
-\subsubsection{LLM Assistant}
+\subsubsection{F1 Assistant}
 
-The public interface now includes an \texttt{/assistant/} page where users can
-ask natural-language questions about the Formula 1 knowledge graph. The server
-uses a Gemini model with a hardcoded schema/context prompt describing the main
-classes, predicates, and identifier conventions of the RDF graph. The workflow
-is two-stage:
+The public interface includes an \texttt{/assistant/} page — accessible via the
+last item in the navigation bar — where users can ask natural-language questions
+about the Formula 1 knowledge graph. The server uses a Gemini language model
+with a hardcoded schema/context prompt describing the main classes, predicates,
+and identifier conventions of the RDF graph. The page provides six example
+questions as clickable chips to help users discover what the assistant can do.
+The workflow is two-stage:
 
 \begin{itemize}[leftmargin=1.5em]
   \item Gemini first generates a read-only \texttt{SELECT} SPARQL query.
@@ -1052,7 +1053,7 @@ SPARQL queries, to a fully functional web interface.
         pit stops, lap times, and standings.
   \item Implement a public SPARQL explorer endpoint, allowing power users to
         run custom queries against the knowledge graph.
-  \item Integrate live data from the current season via the Ergast API.
+  \item Integrate live data from the current season via the official Formula 1 data feeds or the Kaggle dataset updates.
 \end{itemize}
 
 % =============================================================================
@@ -1095,7 +1096,8 @@ GEMINI_KEY=your-gemini-api-key
 \subsection{Step 3 --- Prepare the Knowledge Graph}
 
 \begin{enumerate}[leftmargin=2em]
-  \item Place the Ergast CSV files in \texttt{data/raw/}.
+  \item Place the CSV files from the \textbf{Formula 1 World Championship (1950 - 2024)}
+(\url{https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020?select=circuits.csv}) in \texttt{data/raw/}.
   \item Run the conversion script to generate N-Triples:
 \begin{lstlisting}[style=shell]
 python scripts/csv_to_rdf.py

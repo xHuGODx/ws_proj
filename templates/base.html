@@ -620,9 +620,6 @@
     <button class="nav-drawer-close" id="navClose" aria-label="Close menu">&#10005;</button>
   </div>
   <div class="nav-drawer-links">
-    <a href="{% url 'championship:llm_assistant' %}" {% if request.resolver_match.url_name == 'llm_assistant' %}class="active"{% endif %}>
-      <span class="drawer-icon">AI</span>LLM Assistant
-    </a>
     <a href="{% url 'championship:drivers' %}" {% if request.resolver_match.url_name == 'drivers' or request.resolver_match.url_name == 'driver_detail' %}class="active"{% endif %}>
       <span class="drawer-icon">DRV</span>Drivers
     </a>
@@ -638,6 +635,9 @@
     <a href="{% url 'championship:circuits' %}" {% if request.resolver_match.url_name == 'circuits' or request.resolver_match.url_name == 'circuit_detail' %}class="active"{% endif %}>
       <span class="drawer-icon">TRK</span>Circuits
     </a>
+    <a href="{% url 'championship:llm_assistant' %}" {% if request.resolver_match.url_name == 'llm_assistant' %}class="active"{% endif %}>
+      <span class="drawer-icon">AI</span>F1 Assistant
+    </a>
   </div>
 </div>
 
@@ -646,12 +646,12 @@
     <span class="nav-brand-f1">F<span>1</span></span>
   </a>
   <div class="nav-links" id="navLinks">
-    <a href="{% url 'championship:llm_assistant' %}" {% if request.resolver_match.url_name == 'llm_assistant' %}class="active"{% endif %}>LLM Assistant</a>
     <a href="{% url 'championship:drivers' %}"      {% if request.resolver_match.url_name == 'drivers'      or request.resolver_match.url_name == 'driver_detail'      %}class="active"{% endif %}>Drivers</a>
     <a href="{% url 'championship:constructors' %}" {% if request.resolver_match.url_name == 'constructors' or request.resolver_match.url_name == 'constructor_detail' %}class="active"{% endif %}>Constructors</a>
     <a href="{% url 'championship:seasons' %}"      {% if request.resolver_match.url_name == 'seasons'      or request.resolver_match.url_name == 'season_detail'      %}class="active"{% endif %}>Seasons</a>
     <a href="{% url 'championship:races' %}"        {% if request.resolver_match.url_name == 'races'        or request.resolver_match.url_name == 'race_detail'        %}class="active"{% endif %}>Races</a>
     <a href="{% url 'championship:circuits' %}"     {% if request.resolver_match.url_name == 'circuits'     or request.resolver_match.url_name == 'circuit_detail'     %}class="active"{% endif %}>Circuits</a>
+    <a href="{% url 'championship:llm_assistant' %}" {% if request.resolver_match.url_name == 'llm_assistant' %}class="active"{% endif %}>F1 Assistant</a>
   </div>
   {% if user.is_authenticated %}
   <div style="display:inline-flex;align-items:center;gap:0.4rem;flex-shrink:0;">

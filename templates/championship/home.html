@@ -131,28 +131,38 @@
     color: var(--red);
   }
 
-  /* 5-card grid: row 1 = 3 cards, row 2 = 2 centred cards */
+  /* 6-card grid: 2 rows of 3 */
   .cards-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
     margin-bottom: 1.5rem;
   }
 
-  .cards-grid .nav-card:nth-child(1) { grid-column: 1 / span 2; }
-  .cards-grid .nav-card:nth-child(2) { grid-column: 3 / span 2; }
-  .cards-grid .nav-card:nth-child(3) { grid-column: 5 / span 2; }
-  .cards-grid .nav-card:nth-child(4) { grid-column: 2 / span 2; }
-  .cards-grid .nav-card:nth-child(5) { grid-column: 4 / span 2; }
+  /* AI card gets a subtle accent border to stand out */
+  .cards-grid .nav-card:last-child .section-card {
+    border-color: var(--grey-d);
+  }
+  .cards-grid .nav-card:last-child:hover .section-card {
+    border-color: var(--red);
+  }
+  .cards-grid .nav-card:last-child .card-icon {
+    background: var(--panel-l);
+    border: 1px solid var(--grey-d);
+    color: var(--grey);
+  }
+  .cards-grid .nav-card:last-child:hover .card-icon {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+  }
 
   @media (max-width: 900px) {
     .cards-grid { grid-template-columns: repeat(2, 1fr); }
-    .cards-grid .nav-card { grid-column: auto / span 1 !important; }
   }
 
   @media (max-width: 540px) {
     .cards-grid { grid-template-columns: 1fr; }
-    .cards-grid .nav-card { grid-column: auto / span 1 !important; }
   }
 
   /* ── Status bar ─────────────────────────────────────────── */
@@ -264,6 +274,15 @@
       <div class="section-card-title">Circuits</div>
       <p class="section-card-desc">{{ stats.1.value }} circuits — race histories, lap records, locations and active status.</p>
       <span class="section-card-arrow">Explore &rsaquo;</span>
+    </div>
+  </a>
+
+  <a href="{% url 'championship:llm_assistant' %}" class="nav-card">
+    <div class="section-card">
+      <span class="card-icon">AI</span>
+      <div class="section-card-title">F1 Assistant</div>
+      <p class="section-card-desc">Ask any Formula 1 question in plain English. The assistant queries the knowledge graph and answers in natural language.</p>
+      <span class="section-card-arrow">Ask &rsaquo;</span>
     </div>
   </a>
 
