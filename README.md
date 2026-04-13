@@ -27,6 +27,8 @@ The dataset (≈ 150 000+ triples) is modelled in RDF using a custom `f1:` vocab
 | `/races/<id>/` | Race Detail | Full results table (position, driver, constructor, laps, time, status), pit stops, qualifying |
 | `/seasons/` | Seasons | 16-season card grid with race count, top winner per season |
 | `/seasons/<year>/` | Season Detail | Race calendar, driver standings, constructor standings |
+| `/assistant/` | F1 Assistant | Ask any F1 question in plain English — Gemini translates it to SPARQL, queries GraphDB, returns a natural-language answer |
+| `/admin-panel/` | Admin Panel | Staff-only CRUD for drivers, constructors, circuits, races, seasons; CSV import; data quality checks |
 
 ---
 
@@ -77,7 +79,7 @@ The conversion script is at `scripts/csv_to_rdf.py`. It reads from `data/raw/`, 
 
 - Python 3.11+
 - GraphDB Free running locally (default: `http://localhost:7200`)
-- A GraphDB repository named `formula1`
+- A GraphDB repository named `ws-formula1`
 
 ### Steps
 
@@ -90,7 +92,7 @@ pip install -r requirements.txt
 
 # 3. Configure environment
 cp .env.example .env
-# Edit .env — set GRAPHDB_ENDPOINT, GRAPHDB_REPO, SECRET_KEY
+# Edit .env — set GRAPHDB_ENDPOINT, GRAPHDB_REPO, SECRET_KEY, GEMINI_API_KEY
 
 # 4. Build the RDF graph (requires CSV files in data/raw/)
 python scripts/csv_to_rdf.py
@@ -120,19 +122,12 @@ Admin panel: `http://localhost:8000/admin-panel/login/`
 | SPARQL client | SPARQLWrapper |
 | RDF serialisation | rdflib (N-Triples output) |
 | Auth / sessions | Django `contrib.auth` (SQLite) |
+| NLU assistant | Google Gemini API (`google-generativeai`) |
 | Front-end | Vanilla HTML/CSS (dark + light theme) |
 | Fonts | Barlow Condensed (Google Fonts) |
-| Report | LaTeX (`report/report.tex`) — build with `cd report && ./build.sh` |
 
 ---
 
 ## Report
 
-The project report is at `report/report.tex`. To build the PDF:
-
-```bash
-cd report
-./build.sh      # requires pdflatex (texlive-latex-extra)
-```
-
-Output: `report/report.pdf`
+The project report is available at `report.pdf`.
