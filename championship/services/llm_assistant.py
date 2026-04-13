@@ -7,6 +7,8 @@ import socket
 import urllib.error
 import urllib.request
 
+from SPARQLWrapper.SPARQLExceptions import QueryBadFormed
+
 from .graphdb import GraphDBClient
 
 
@@ -22,61 +24,26 @@ def _gemini_request_timeout() -> int:
     return int(os.getenv("GEMINI_REQUEST_TIMEOUT", "180"))
 
 
+def _max_query_repairs() -> int:
+    return max(int(os.getenv("GEMINI_QUERY_REPAIRS", "1")), 0)
+
+
 MAX_RESULT_ROWS = 25
-SPARQL_CONTEXT = """You answer questions about a Formula 1 RDF knowledge graph.
-
-The GraphDB client already injects these prefixes:
-- PREFIX f1: <http://example.org/f1/>
-- PREFIX res: <http://example.org/resource/>
-- PREFIX rdf:
-- PREFIX rdfs:
-- PREFIX xsd:
-
-Use only SELECT queries.
-Never generate INSERT, DELETE, DROP, CLEAR, CREATE, LOAD, COPY, MOVE, ADD, or SERVICE.
-Prefer exact predicates that already exist in the graph.
-
-Common entity identifiers:
-- Drivers: ?driver f1:driverId ?driverId ; rdfs:label ?driverLabel .
-- Constructors: ?constructor f1:constructorId ?constructorId ; rdfs:label ?constructorLabel .
-- Circuits: ?circuit f1:circuitId ?circuitId ; rdfs:label ?circuitLabel .
-- Races: ?race f1:raceId ?raceId ; rdfs:label ?raceLabel ; f1:year ?year ; f1:round ?round .
-- Results: ?res f1:resultId ?resultId ; f1:race ?race ; f1:driver ?driver ; f1:constructor ?constructor .
-
-Useful result predicates:
-- f1:positionOrder
-- f1:position
-- f1:positionText
-- f1:points
-- f1:grid
-- f1:laps
-- f1:time
-- f1:milliseconds
-- f1:fastestLap
-- f1:fastestLapTime
-- f1:fastestLapSpeed
-- f1:statusId
-
-Useful entity predicates:
-- Drivers: f1:forename, f1:surname, f1:nationality, f1:dob, f1:code, f1:number
-- Constructors: f1:name, f1:nationality
-- Races: f1:name, f1:year, f1:round, f1:date, f1:circuit
-- Circuits: f1:name, f1:location, f1:country, f1:lat, f1:lng
-- Status entities: ?statusEnt f1:statusId ?statusId ; f1:status ?statusText .
-
-Patterns:
-- Winner of a race: filter result row with f1:positionOrder 1.
-- Race by year/name:
-  ?race f1:year ?year ; rdfs:label ?raceLabel .
-- Constructor for a result:
-  ?res f1:constructor ?constructor .
-- Driver for a result:
-  ?res f1:driver ?driver .
-
-Return compact JSON with one key:
-{ "sparql": "SELECT ..." }
-Include JSON only.
-"""
+MAX_ANSWER_ROWS = 10
+MAX_CELL_LENGTH = 160
+SPARQL_CONTEXT = """F1 RDF graph. Prefixes already injected: f1, res, rdf, rdfs, xsd.
+Only SELECT. Never use INSERT, DELETE, DROP, CLEAR, CREATE, LOAD, COPY, MOVE, ADD, SERVICE.
+Use existing predicates only.
+Core patterns:
+driver: ?driver f1:driverId ?driverId ; rdfs:label ?driverLabel .
+constructor: ?constructor f1:constructorId ?constructorId ; rdfs:label ?constructorLabel .
+circuit: ?circuit f1:circuitId ?circuitId ; rdfs:label ?circuitLabel .
+race: ?race f1:raceId ?raceId ; rdfs:label ?raceLabel ; f1:year ?year ; f1:round ?round .
+result: ?res f1:resultId ?resultId ; f1:race ?race ; f1:driver ?driver ; f1:constructor ?constructor .
+Useful predicates: f1:positionOrder f1:position f1:positionText f1:points f1:grid f1:laps f1:time f1:milliseconds f1:fastestLap f1:fastestLapTime f1:fastestLapSpeed f1:statusId f1:forename f1:surname f1:nationality f1:dob f1:code f1:number f1:name f1:date f1:circuit f1:location f1:country f1:lat f1:lng.
+Status text pattern: ?statusEnt f1:statusId ?statusId ; f1:status ?statusText .
+Race winner: filter result with f1:positionOrder 1.
+Return JSON only: {\"sparql\":\"SELECT ...\"}"""
 
 DISALLOWED_SPARQL_RE = re.compile(
     r"\b(INSERT|DELETE|DROP|CLEAR|CREATE|LOAD|COPY|MOVE|ADD|SERVICE|WITH|USING)\b",
@@ -94,7 +61,7 @@ def answer_question(question: str, db: GraphDBClient | None = None) -> dict[str,
 
     graphdb = db or GraphDBClient()
     sparql = generate_sparql(question)
-    rows = graphdb.query(sparql)
+    rows, sparql = _run_query_with_repair(graphdb, question, sparql)
     answer = generate_answer(question, rows)
     return {
         "question": question,
@@ -117,6 +84,7 @@ def generate_sparql(question: str) -> str:
         ),
         prompt=prompt,
         response_mime_type="application/json",
+        temperature=0,
     )
     parsed = _parse_json_response(payload)
     sparql = str(parsed.get("sparql", "")).strip()
@@ -124,7 +92,8 @@ def generate_sparql(question: str) -> str:
 
 
 def generate_answer(question: str, rows: list[dict[str, str]]) -> str:
-    result_json = json.dumps(rows[:MAX_RESULT_ROWS], ensure_ascii=True, indent=2)
+    compact_rows = _compact_rows(rows[:MAX_ANSWER_ROWS])
+    result_json = json.dumps(compact_rows, ensure_ascii=True, separators=(",", ":"))
     payload = _gemini_request(
         system_text=(
             "You are a helpful Formula 1 assistant. "
@@ -133,10 +102,11 @@ def generate_answer(question: str, rows: list[dict[str, str]]) -> str:
             "If the result set is empty, say you could not find matching data in the graph."
         ),
         prompt=(
-            f"Question:\n{question}\n\n"
-            f"SPARQL result rows:\n{result_json}\n"
+            f"Question: {question}\n"
+            f"Rows(JSON): {result_json}\n"
         ),
         response_mime_type="text/plain",
+        temperature=0.2,
     )
     text = _extract_text_response(payload).strip()
     if not text:
@@ -144,14 +114,14 @@ def generate_answer(question: str, rows: list[dict[str, str]]) -> str:
     return text
 
 
-def _gemini_request(*, system_text: str, prompt: str, response_mime_type: str) -> dict:
+def _gemini_request(*, system_text: str, prompt: str, response_mime_type: str, temperature: float) -> dict:
     body = {
         "systemInstruction": {
             "parts": [{"text": system_text}],
         },
         "contents": [{"role": "user", "parts": [{"text": prompt}]}],
         "generationConfig": {
-            "temperature": 0.2,
+            "temperature": temperature,
             "responseMimeType": response_mime_type,
         },
     }
@@ -201,6 +171,62 @@ def _clean_response(text: str) -> str:
     if cleaned.endswith("```"):
         cleaned = cleaned[: cleaned.rfind("```")]
     return cleaned.strip()
+
+
+def _compact_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    compacted: list[dict[str, str]] = []
+    for row in rows:
+        compact_row: dict[str, str] = {}
+        for key, value in row.items():
+            text = str(value)
+            if len(text) > MAX_CELL_LENGTH:
+                text = text[: MAX_CELL_LENGTH - 1] + "…"
+            compact_row[key] = text
+        compacted.append(compact_row)
+    return compacted
+
+
+def _run_query_with_repair(
+    graphdb: GraphDBClient,
+    question: str,
+    sparql: str,
+) -> tuple[list[dict[str, str]], str]:
+    current = sparql
+    for attempt in range(_max_query_repairs() + 1):
+        try:
+            return graphdb.query(current), current
+        except QueryBadFormed as exc:
+            if attempt >= _max_query_repairs():
+                raise LLMAssistantError("The assistant generated an invalid query for this question.") from exc
+            current = _repair_sparql(question, current, str(exc))
+        except Exception as exc:  # noqa: BLE001
+            raise LLMAssistantError(f"GraphDB query failed: {exc}") from exc
+    raise LLMAssistantError("The assistant could not run the generated query.")
+
+
+def _repair_sparql(question: str, sparql: str, error_text: str) -> str:
+    prompt = (
+        "Fix the malformed SPARQL query below.\n"
+        "Return valid JSON only with key sparql.\n"
+        "Keep it read-only SELECT only.\n"
+        "Do not explain anything.\n\n"
+        f"{SPARQL_CONTEXT}\n\n"
+        f"User question:\n{question}\n\n"
+        f"Broken query:\n{sparql}\n\n"
+        f"GraphDB error:\n{error_text}\n"
+    )
+    payload = _gemini_request(
+        system_text=(
+            "You repair malformed read-only SPARQL queries for a Formula 1 RDF graph. "
+            "Output JSON only."
+        ),
+        prompt=prompt,
+        response_mime_type="application/json",
+        temperature=0,
+    )
+    parsed = _parse_json_response(payload)
+    repaired = str(parsed.get("sparql", "")).strip()
+    return _validate_sparql(repaired)
 
 
 def _validate_sparql(sparql: str) -> str:
